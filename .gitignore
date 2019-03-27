@@ -1,0 +1,11 @@
+_site/*
+_drafts/
+.DS_Store
+.sass-cache/*
+
+.idea/
+Gemfile
+Gemfile.lock
+_posts/.MWebMetaData/
+.jekyll-metadata
+start
