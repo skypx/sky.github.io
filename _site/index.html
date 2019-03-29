@@ -114,6 +114,308 @@
         <hr>
         <ul>
             
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/03/26/nesting_recycleView_touch/">扫盲系列之Retrofit 基本用法</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-03-26
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#扫盲系列" title="Category: 扫盲系列" rel="category">扫盲系列</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Android" title="Tag: Android" rel="tag">Android</a>&nbsp;
+    
+        <a href="/tag/#Retrofit" title="Tag: Retrofit" rel="tag">Retrofit</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#1-test" id="markdown-toc-1-test">1. test</a></li>
+</ul>
+
+<h2 id="1-test">1. test</h2>
+
+<p>### 2. 这是一个</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">OutRecyclerView</span> <span class="kd">extends</span> <span class="n">RecyclerView</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">TAG</span> <span class="o">=</span> <span class="s">"OutRecyclerView"</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mInitialTouchX</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mInitialTouchY</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">INVALID_POINTER</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mScrollPointerId</span> <span class="o">=</span> <span class="n">INVALID_POINTER</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mTouchSlop</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ViewConfiguration</span> <span class="n">mViewConfiguration</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">AttributeSet</span> <span class="n">attrs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">AttributeSet</span> <span class="n">attrs</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defStyle</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="n">defStyle</span><span class="o">);</span>
+        <span class="n">mViewConfiguration</span> <span class="o">=</span> <span class="n">ViewConfiguration</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+        <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledTouchSlop</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setScrollingTouchSlop</span><span class="o">(</span><span class="kt">int</span> <span class="n">slopConstant</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">setScrollingTouchSlop</span><span class="o">(</span><span class="n">slopConstant</span><span class="o">);</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">slopConstant</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">TOUCH_SLOP_DEFAULT:</span>
+                <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledTouchSlop</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="nl">TOUCH_SLOP_PAGING:</span>
+                <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledPagingTouchSlop</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">onInterceptTouchEvent</span><span class="o">(</span><span class="n">MotionEvent</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">action</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getAction</span><span class="o">();</span>
+        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">()</span> <span class="o">+</span> <span class="s">"    action : "</span> <span class="o">+</span> <span class="n">action</span> <span class="o">+</span> <span class="s">"   getScrollState: "</span> <span class="o">+</span> <span class="n">getScrollState</span><span class="o">()</span> <span class="o">+</span> <span class="s">"  "</span><span class="o">);</span>
+        <span class="kt">boolean</span> <span class="n">intercepted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="n">MotionEvent</span><span class="o">.</span><span class="na">ACTION_DOWN</span><span class="o">:</span>
+                <span class="kt">int</span> <span class="n">state</span> <span class="o">=</span> <span class="n">getScrollState</span><span class="o">();</span>
+                <span class="n">mScrollPointerId</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getPointerId</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+                <span class="n">mInitialTouchX</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="n">mInitialTouchY</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="n">intercepted</span> <span class="o">=</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">SCROLL_STATE_SETTLING</span> <span class="o">||</span> <span class="n">state</span> <span class="o">==</span> <span class="n">SCROLL_STATE_DRAGGING</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">intercepted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">return</span> <span class="n">intercepted</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">MotionEvent</span><span class="o">.</span><span class="na">ACTION_MOVE</span><span class="o">:</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">findPointerIndex</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">mScrollPointerId</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">getX</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">index</span><span class="o">)</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">getY</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">index</span><span class="o">)</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">mInitialTouchX</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">mInitialTouchY</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">canScrollHorizontally</span> <span class="o">=</span> <span class="n">getLayoutManager</span><span class="o">().</span><span class="na">canScrollHorizontally</span><span class="o">();</span>
+                <span class="kt">boolean</span> <span class="n">startScroll</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">canScrollHorizontally</span> <span class="o">&amp;&amp;</span> <span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dx</span><span class="o">)</span> <span class="o">&gt;</span> <span class="n">mTouchSlop</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dx</span><span class="o">)</span> <span class="o">&gt;=</span> <span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dy</span><span class="o">)))</span> <span class="o">{</span>
+                    <span class="n">startScroll</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="n">intercepted</span> <span class="o">=</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">()</span> <span class="o">+</span>  <span class="s">"   ACTION_MOVE  : intercepted: "</span> <span class="o">+</span> <span class="n">intercepted</span> <span class="o">+</span> <span class="s">"   startScroll: "</span> <span class="o">+</span> <span class="n">startScroll</span><span class="o">);</span>
+                <span class="k">return</span> <span class="n">startScroll</span> <span class="o">&amp;&amp;</span> <span class="n">intercepted</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>hbnfdghdfgsfhsfdg</p>
+
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/03/26/nesting_recycleView_touch/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/03/26/nesting_recycleView_touch-(copy)/">扫盲系列之Retrofit 基本用法</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-03-26
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#扫盲系列" title="Category: 扫盲系列" rel="category">扫盲系列</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Android" title="Tag: Android" rel="tag">Android</a>&nbsp;
+    
+        <a href="/tag/#Retrofit" title="Tag: Retrofit" rel="tag">Retrofit</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#1-test" id="markdown-toc-1-test">1. test</a></li>
+</ul>
+
+<h2 id="1-test">1. test</h2>
+
+<p>### 2. 这是一个</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">OutRecyclerView</span> <span class="kd">extends</span> <span class="n">RecyclerView</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">TAG</span> <span class="o">=</span> <span class="s">"OutRecyclerView"</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mInitialTouchX</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mInitialTouchY</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">INVALID_POINTER</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mScrollPointerId</span> <span class="o">=</span> <span class="n">INVALID_POINTER</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="kt">int</span> <span class="n">mTouchSlop</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">ViewConfiguration</span> <span class="n">mViewConfiguration</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">AttributeSet</span> <span class="n">attrs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="nf">OutRecyclerView</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">AttributeSet</span> <span class="n">attrs</span><span class="o">,</span> <span class="kt">int</span> <span class="n">defStyle</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="n">defStyle</span><span class="o">);</span>
+        <span class="n">mViewConfiguration</span> <span class="o">=</span> <span class="n">ViewConfiguration</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+        <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledTouchSlop</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setScrollingTouchSlop</span><span class="o">(</span><span class="kt">int</span> <span class="n">slopConstant</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">setScrollingTouchSlop</span><span class="o">(</span><span class="n">slopConstant</span><span class="o">);</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">slopConstant</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">TOUCH_SLOP_DEFAULT:</span>
+                <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledTouchSlop</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="nl">TOUCH_SLOP_PAGING:</span>
+                <span class="n">mTouchSlop</span> <span class="o">=</span> <span class="n">mViewConfiguration</span><span class="o">.</span><span class="na">getScaledPagingTouchSlop</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">onInterceptTouchEvent</span><span class="o">(</span><span class="n">MotionEvent</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">action</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getAction</span><span class="o">();</span>
+        <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">()</span> <span class="o">+</span> <span class="s">"    action : "</span> <span class="o">+</span> <span class="n">action</span> <span class="o">+</span> <span class="s">"   getScrollState: "</span> <span class="o">+</span> <span class="n">getScrollState</span><span class="o">()</span> <span class="o">+</span> <span class="s">"  "</span><span class="o">);</span>
+        <span class="kt">boolean</span> <span class="n">intercepted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="n">MotionEvent</span><span class="o">.</span><span class="na">ACTION_DOWN</span><span class="o">:</span>
+                <span class="kt">int</span> <span class="n">state</span> <span class="o">=</span> <span class="n">getScrollState</span><span class="o">();</span>
+                <span class="n">mScrollPointerId</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="na">getPointerId</span><span class="o">(</span><span class="mi">0</span><span class="o">);</span>
+                <span class="n">mInitialTouchX</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getX</span><span class="o">()</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="n">mInitialTouchY</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">e</span><span class="o">.</span><span class="na">getY</span><span class="o">()</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="n">intercepted</span> <span class="o">=</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">state</span> <span class="o">==</span> <span class="n">SCROLL_STATE_SETTLING</span> <span class="o">||</span> <span class="n">state</span> <span class="o">==</span> <span class="n">SCROLL_STATE_DRAGGING</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">intercepted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">return</span> <span class="n">intercepted</span><span class="o">;</span>
+            <span class="k">case</span> <span class="n">MotionEvent</span><span class="o">.</span><span class="na">ACTION_MOVE</span><span class="o">:</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">index</span> <span class="o">=</span> <span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">findPointerIndex</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">mScrollPointerId</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">getX</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">index</span><span class="o">)</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">y</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="o">(</span><span class="n">MotionEventCompat</span><span class="o">.</span><span class="na">getY</span><span class="o">(</span><span class="n">e</span><span class="o">,</span> <span class="n">index</span><span class="o">)</span> <span class="o">+</span> <span class="mf">0.5f</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">dx</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">mInitialTouchX</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">dy</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">mInitialTouchY</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">canScrollHorizontally</span> <span class="o">=</span> <span class="n">getLayoutManager</span><span class="o">().</span><span class="na">canScrollHorizontally</span><span class="o">();</span>
+                <span class="kt">boolean</span> <span class="n">startScroll</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">canScrollHorizontally</span> <span class="o">&amp;&amp;</span> <span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dx</span><span class="o">)</span> <span class="o">&gt;</span> <span class="n">mTouchSlop</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dx</span><span class="o">)</span> <span class="o">&gt;=</span> <span class="n">Math</span><span class="o">.</span><span class="na">abs</span><span class="o">(</span><span class="n">dy</span><span class="o">)))</span> <span class="o">{</span>
+                    <span class="n">startScroll</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="n">intercepted</span> <span class="o">=</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getSimpleName</span><span class="o">()</span> <span class="o">+</span>  <span class="s">"   ACTION_MOVE  : intercepted: "</span> <span class="o">+</span> <span class="n">intercepted</span> <span class="o">+</span> <span class="s">"   startScroll: "</span> <span class="o">+</span> <span class="n">startScroll</span><span class="o">);</span>
+                <span class="k">return</span> <span class="n">startScroll</span> <span class="o">&amp;&amp;</span> <span class="n">intercepted</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="k">default</span><span class="o">:</span>
+                <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">onInterceptTouchEvent</span><span class="o">(</span><span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>hbnfdghdfgsfhsfdg</p>
+
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/03/26/nesting_recycleView_touch-(copy)/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
         </ul>
 
 
@@ -124,7 +426,7 @@
             <span class="previous disable"><i class="fa fa-angle-double-left"></i></span>
             <span class="previous disable"><i class="fa fa-angle-left"></i></span>
           
-          <span class="page_number ">/</span>
+          <span class="page_number ">1/1</span>
           
             <span class="next disable"><i class="fa fa-angle-right"></i></span>
             <span class="next disable"><i class="fa fa-angle-double-right"></i></span>
@@ -141,6 +443,10 @@
                 </div>
                 <ul class="content-ul" recent>
                     
+                        <li><a href="/2019/03/26/nesting_recycleView_touch/">扫盲系列之Retrofit 基本用法</a></li>
+                    
+                        <li><a href="/2019/03/26/nesting_recycleView_touch-(copy)/">扫盲系列之Retrofit 基本用法</a></li>
+                    
                 </ul>
             </div>
 
@@ -151,6 +457,15 @@
                     Categories
                 </div>
                 <ul class="content-ul" cate>
+                    
+                    <li>
+                        <a href="/category/#扫盲系列" class="categories-list-item" cate="扫盲系列">
+                            <span class="name">
+                                扫盲系列
+                            </span>
+                            <span class="badge">2</span>
+                        </a>
+                    </li>
                     
                 </ul>
             </div>
@@ -168,6 +483,20 @@
 
                     
 
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Android" style="font-size: 9pt; color: #999;">Android</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Retrofit" style="font-size: 9pt; color: #999;">Retrofit</a>
                     
                 </div>
             </div>
@@ -227,7 +556,9 @@
     </a>
 </div>
 
+    <script type="text/javascript" charset="utf-8" src="https://changyan.itc.cn/js/lib/jquery.js"></script>
     <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/prism.js " charset="utf-8"></script>
     <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
     <script type="text/javascript">
       smoothScroll.init({
@@ -235,6 +566,9 @@
         easing: 'easeInOutCubic', // Easing pattern to use
         offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
       });
+    </script>
+    <script type="text/javascript">
+      $('pre').addClass("line-numbers");
     </script>
     <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
   </body>
