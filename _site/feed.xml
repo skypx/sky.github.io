@@ -5,8 +5,8 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 14 Jun 2019 19:17:38 +0800</pubDate>
-    <lastBuildDate>Fri, 14 Jun 2019 19:17:38 +0800</lastBuildDate>
+    <pubDate>Fri, 14 Jun 2019 22:04:44 +0800</pubDate>
+    <lastBuildDate>Fri, 14 Jun 2019 22:04:44 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -237,7 +237,6 @@ Google Play 上发布了一个在其清单中声明了 maxSdkVersion=”5” 的
   &lt;li&gt;&lt;a href=&quot;#针对api1来说&quot; id=&quot;markdown-toc-针对api1来说&quot;&gt;针对API1来说&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#针对api2来说&quot; id=&quot;markdown-toc-针对api2来说&quot;&gt;针对API2来说&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#具体的code方式&quot; id=&quot;markdown-toc-具体的code方式&quot;&gt;具体的code方式&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;#总结&quot; id=&quot;markdown-toc-总结&quot;&gt;总结&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;h1 id=&quot;什么是zsl&quot;&gt;什么是ZSL&lt;/h1&gt;
@@ -271,21 +270,57 @@ Google Play 上发布了一个在其清单中声明了 maxSdkVersion=”5” 的
 &lt;h1 id=&quot;具体的code方式&quot;&gt;具体的code方式&lt;/h1&gt;
 
 &lt;ol&gt;
-  &lt;li&gt;
-    创建Session的方式 &lt;code class=&quot;highlighter-rouge&quot;&gt;createReprocessableCaptureSessionByConfigurations&lt;/code&gt;
+  &lt;li&gt;创建Session的方式 &lt;code class=&quot;highlighter-rouge&quot;&gt;createReprocessableCaptureSessionByConfigurations&lt;/code&gt;
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;camera&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createReprocessableCaptureSessionByConfigurations&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputConfiguration&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sessionListener&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
   &lt;/li&gt;
-  &lt;li&gt;设置&lt;code class=&quot;highlighter-rouge&quot;&gt;InputConfiguration&lt;/code&gt;, 还有&lt;code class=&quot;highlighter-rouge&quot;&gt;ImageWrite&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;在&lt;code class=&quot;highlighter-rouge&quot;&gt;onImageAvailable&lt;/code&gt; 可用的时候把image图片放入队列中, 还有&lt;code class=&quot;highlighter-rouge&quot;&gt;TotalCaptureResult&lt;/code&gt;放入对列中&lt;/li&gt;
-  &lt;li&gt;如果拍照的时候.set&lt;code class=&quot;highlighter-rouge&quot;&gt;ImageWrite.queueInputImage&lt;/code&gt;,  同时 cameradevice.createReprocessCaptureRequest(TotalCaptureResult)&lt;/li&gt;
-  &lt;li&gt;这个时候去拍照, session.capture(..)&lt;/li&gt;
+  &lt;li&gt;设置&lt;code class=&quot;highlighter-rouge&quot;&gt;InputConfiguration&lt;/code&gt;, 还有&lt;code class=&quot;highlighter-rouge&quot;&gt;ImageWrite&lt;/code&gt;
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;InputConfiguration&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputConfiguration&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;InputConfiguration&lt;/span&gt;
+                           &lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;width&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;height&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt;
+                           &lt;span class=&quot;n&quot;&gt;ImageFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;YUV_420_888&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;创建新的ImageReader来配置和InputConfiguration一样的参数
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;ImageReader&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mZslImageReader&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ImageReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;width&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;height&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt;
+                           &lt;span class=&quot;n&quot;&gt;ImageFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;PRIVATE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;把zslIamgereader传入setRepeatingBurst, 这样就可以获取这个流了
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;CaptureRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Builder&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;reqBuilder&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cameraDevice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createCaptureRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;templateType&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;reqBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addTarget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mZslImageReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getSurface&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;mCaptureSession&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setRepeatingBurst&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;reqBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;....);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;设置ZslImageReader的callback. onImageAvailable 可用的时候放入对列
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Image&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mQueue&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;LinkedBlockingQueue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Image&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;();&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;mQueue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;add&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Image&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+    &lt;a href=&quot;http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/utils/src/android/hardware/camera2/cts/CameraTestUtils.java#286&quot;&gt;参考CTS&lt;/a&gt;
+  &lt;/li&gt;
+  &lt;li&gt;设置ImageWriter
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;err&quot;&gt;这个&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;surface&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;其实就是设置&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputconfig&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;的时候底层创建的&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;surface&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;ImageWriter&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mImageWriter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ImageWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;newInstance&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;session&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getInputSurface&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;把LinkedBlockingQueue里面的image送给下面去重新操作, 同时把result也放入进去
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;mImageWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;queueInputImage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mQueue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getImage&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//伪代码&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;captureRequestBuilder&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mCameraDevice&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;
+                           &lt;span class=&quot;nf&quot;&gt;createReprocessCaptureRequest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mQueue&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getResult&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+  &lt;li&gt;重新去拍照, 用图片的ImageReader
+    &lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;n&quot;&gt;captureRequestBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addTarget&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mCaptureImageReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getSurface&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;mCaptureSession&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;capture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;captureRequestBuilder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(),&lt;/span&gt;
+                           &lt;span class=&quot;n&quot;&gt;captureRequestCallback&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mCameraDeviceHandler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getDeviceThreadHandler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;());&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;h1 id=&quot;总结&quot;&gt;总结&lt;/h1&gt;
-&lt;ul&gt;
-  &lt;li&gt;不管是用API1 的方式还是API2的方式去ZSL拍照. 都是为了提升拍照的速度, 和普通的拍照的较大区别是先处理和后处理
-普通的拍照是把图片在HAL层先处理白平衡.降噪等的处理. 而ZSL拍照是先获取YUV数据,然后在进行InputConfig的后处理
-其实ImageWrite write到了InputConfig里面&lt;/li&gt;
-&lt;/ul&gt;
+&lt;blockquote&gt;
+  我整理了一张图片大致流程是这样的
+  &lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zslnew.png&quot; alt=&quot;avatar&quot; /&gt;
+&lt;/blockquote&gt;
+
 </description>
         <pubDate>Wed, 12 Jun 2019 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2019/06/12/data_camerazsl/</link>
