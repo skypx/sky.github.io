@@ -115,6 +115,104 @@
             
               <li>
                 <h2>
+                  <a class="post-link" href="/2019/06/14/data_Linux&Mac&history/">Linux 和 Mac下快速搜索历史命令</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-14
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#工具" title="Category: 工具" rel="category">工具</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Linux" title="Tag: Linux" rel="tag">Linux</a>&nbsp;
+    
+        <a href="/tag/#与" title="Tag: 与" rel="tag">与</a>&nbsp;
+    
+        <a href="/tag/#Mac" title="Tag: Mac" rel="tag">Mac</a>&nbsp;
+    
+        <a href="/tag/#搜索历史命令" title="Tag: 搜索历史命令" rel="tag">搜索历史命令</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    
+<blockquote>
+  <p>在Linux 或者 Mac系统中如何快速搜索已经使用过的命令?</p>
+</blockquote>
+
+<ul>
+  <li>
+    <p>在Linux中我们可以用history查询已经使用过的命令</p>
+  </li>
+  <li>
+    <p>并且还可以用 Ctrl + R 来搜索已经用过的命令</p>
+  </li>
+  <li>
+    <p>我们用一种更快的方式来搜索, 你忘记了以前输入过的某个命令, 只记得开头的几个字母, 没关系
+ 下面我们看看怎么快速补全</p>
+  </li>
+</ul>
+
+<ol>
+  <li>进入你的用户目录下.建立.inputrc文件</li>
+  <li>
+    <p>输入以下内容</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="s">"\e[A"</span><span class="o">:</span> <span class="n">history</span><span class="o">-</span><span class="n">search</span><span class="o">-</span><span class="n">backward</span>
+ <span class="s">"\e[B"</span><span class="o">:</span> <span class="n">history</span><span class="o">-</span><span class="n">search</span><span class="o">-</span><span class="n">forward</span>
+ <span class="n">set</span> <span class="n">show</span><span class="o">-</span><span class="n">all</span><span class="o">-</span><span class="k">if</span><span class="o">-</span><span class="n">ambiguous</span> <span class="n">on</span>
+ <span class="n">set</span> <span class="n">completion</span><span class="o">-</span><span class="n">ignore</span><span class="o">-</span><span class="k">case</span> <span class="n">on</span>
+</code></pre></div>    </div>
+  </li>
+  <li>保存, 执行 bind -f .inputrc</li>
+</ol>
+
+<p>然后你随便输入几个命令. ls, pwd, cd, ….
+这个时候想输入pwd, 只用输入p 然后按键盘上键, 命令自动补充完毕. 大大提升工作效率!!</p>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/14/data_Linux&Mac&history/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
                   <a class="post-link" href="/2019/06/14/data_androidtargetsdk/">关于minsdk, targetsdk, maxsdk</a>
                 </h2>
                 <div class="label">
@@ -370,7 +468,231 @@
             
               <li>
                 <h2>
-                  <a class="post-link" href="/2019/06/11/data_tools/">Mac 下的剪切操作</a>
+                  <a class="post-link" href="/2019/06/12/data_camerazsl/">Camera ZSL 拍照</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-12
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Camera" title="Category: Camera" rel="category">Camera</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Camera" title="Tag: Camera" rel="tag">Camera</a>&nbsp;
+    
+        <a href="/tag/#拍照" title="Tag: 拍照" rel="tag">拍照</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#什么是zsl" id="markdown-toc-什么是zsl">什么是ZSL</a></li>
+  <li><a href="#针对api1来说" id="markdown-toc-针对api1来说">针对API1来说</a></li>
+  <li><a href="#针对api2来说" id="markdown-toc-针对api2来说">针对API2来说</a></li>
+  <li><a href="#具体的code方式" id="markdown-toc-具体的code方式">具体的code方式</a></li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a></li>
+</ul>
+
+<h1 id="什么是zsl">什么是ZSL</h1>
+<ul>
+  <li>
+    <p>ZSL (zero shutter lag)：零秒延迟</p>
+  </li>
+  <li>
+    <p>在日常生活中，使用手机camera拍照的时候往往会有一些延迟的体验。ZSL，就是为了消除这种延迟，提供一种“拍即视”的体验而被开发出来。</p>
+  </li>
+</ul>
+
+<p><a href="http://blog.chinaunix.net/uid-7213935-id-5753468.html">ZSL链接</a></p>
+
+<h1 id="针对api1来说">针对API1来说</h1>
+<ul>
+  <li>高通会提供关于ZSL的patch给厂商. 厂商通过设置 <code class="highlighter-rouge">setZSLMode</code> 默认是隐藏的方法. 具体对于队列的维护
+放在了Framework层去处理</li>
+</ul>
+
+<h1 id="针对api2来说">针对API2来说</h1>
+<ul>
+  <li>
+    <p>Goolge建议对于缓存队列的处理放在App 层来处理 具体可以参考如下的链接
+<a href="http://androidxref.com/9.0.0_r3/search?q=%22zsl%22&amp;project=packages">Camera2 ZSL</a></p>
+
+    <p>这里要注意的是需要设置模板<code class="highlighter-rouge">TEMPLATE_ZERO_SHUTTER_LAG</code> 来通知HAL切换模板</p>
+  </li>
+</ul>
+
+<h1 id="具体的code方式">具体的code方式</h1>
+
+<ol>
+  <li>
+    <p>创建Session的方式 <code class="highlighter-rouge">createReprocessableCaptureSessionByConfigurations</code></p>
+  </li>
+  <li>设置<code class="highlighter-rouge">InputConfiguration</code>, 还有<code class="highlighter-rouge">ImageWrite</code></li>
+  <li>在<code class="highlighter-rouge">onImageAvailable</code> 可用的时候把image图片放入队列中, 还有<code class="highlighter-rouge">TotalCaptureResult</code>放入对列中</li>
+  <li>如果拍照的时候.set<code class="highlighter-rouge">ImageWrite.queueInputImage</code>,  同时 cameradevice.createReprocessCaptureRequest(TotalCaptureResult)</li>
+  <li>这个时候去拍照, session.capture(..)</li>
+</ol>
+
+<h1 id="总结">总结</h1>
+<ul>
+  <li>不管是用API1 的方式还是API2的方式去ZSL拍照. 都是为了提升拍照的速度, 和普通的拍照的较大区别是先处理和后处理
+普通的拍照是把图片在HAL层先处理白平衡.降噪等的处理. 而ZSL拍照是先获取YUV数据,然后在进行InputConfig的后处理
+其实ImageWrite write到了InputConfig里面</li>
+</ul>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/12/data_camerazsl/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/06/12/data_cameraAPI1_API2/">Camera API1 - API2</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-12
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Camera" title="Category: Camera" rel="category">Camera</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Camera" title="Tag: Camera" rel="tag">Camera</a>&nbsp;
+    
+        <a href="/tag/#API" title="Tag: API" rel="tag">API</a>&nbsp;
+    
+        <a href="/tag/#区别" title="Tag: 区别" rel="tag">区别</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#api-概述" id="markdown-toc-api-概述">API 概述</a></li>
+  <li><a href="#api1-和-api2的流程对比" id="markdown-toc-api1-和-api2的流程对比">API1 和 API2的流程对比</a></li>
+  <li><a href="#java-层代码比较" id="markdown-toc-java-层代码比较">Java 层代码比较</a></li>
+  <li><a href="#camera-api1-主要类" id="markdown-toc-camera-api1-主要类">Camera API1 主要类</a></li>
+  <li><a href="#fw代码" id="markdown-toc-fw代码">FW代码</a></li>
+</ul>
+
+<h1 id="api-概述">API 概述</h1>
+
+<p>Android5.0之后，增加了Cameraapi2接口，api2和api1在调用流程上差异很大，功能上api2提供了更加细致的控制功能，api1子系统被设计为具备高级控制功能的黑盒，能够发出请求，但无法控制图像的缓冲区和元数据，无法再帧层面控制传感器的特性，无法通过访问和修改元数据信息（如3A信息）对捕获的帧应用任何增强功能，重新设计api2旨在大幅提高应用程序控制摄像头子系统的能力，性能也有一定的提升。</p>
+
+<h1 id="api1-和-api2的流程对比">API1 和 API2的流程对比</h1>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/ape_fwk_camera.png" alt="avatar" /></p>
+
+<ul>
+  <li>从图中可以看出在API1中java-&gt; jni -&gt; camera service -&gt; Hal, 但是在API2中 java -&gt; camera service -&gt; Hal
+为什么呢? 这个地方我们可以单独放在后面讲
+就是说java不通过jni可以直接和c++通信. 类似aidl的方式, 链接在下面
+<a href="https://android.googlesource.com/platform/system/tools/aidl/+/brillo-m10-dev/docs/aidl-cpp.md">https://android.googlesource.com/platform/system/tools/aidl/+/brillo-m10-dev/docs/aidl-cpp.md</a></li>
+</ul>
+
+<h1 id="java-层代码比较">Java 层代码比较</h1>
+<h1 id="camera-api1-主要类">Camera API1 主要类</h1>
+
+<ul>
+  <li>Camera api1调用流程比较直观，也利于理解一些，应用程序实例化camera这一个类就可以控制摄像头子系统
+    <ol>
+      <li>Camera，api1主要类。通过类的这些startPreview、takePicture、AutoFocus等标准的接口实现</li>
+      <li>Parameters，参数设置，通过camera内部类Parameters操作实现，如设置帧率，设置图片格式，预览尺寸等</li>
+      <li>CameraInfo，元数据获取，通过camera内部类CameraInfo实现，这里只能获取不能修改</li>
+    </ol>
+  </li>
+  <li>Camera API2 主要类
+    <ol>
+      <li>Camera api2在应用层的调用要复杂一些，定义的类也比较多，这也说明对摄像头子系统控制的更加细腻了</li>
+      <li>CameraManager：摄像头管理器。这是一个全新的系统管理器，专门用于检测系统摄像头、打开系统摄像头。除此之外，调用CameraManager的getCameraCharacteristics(String)方法即可获取指定摄像头的相关特性</li>
+      <li>CameraCharacteristics：摄像头特性。该对象通过CameraManager来获取，用于描述特定摄像头所支持的各种特性</li>
+      <li>CameraDevice：代表系统摄像头。该类的功能类似于早期的Camera类</li>
+      <li>CameraCaptureSession：这是一个非常重要的API，当程序需要预览、拍照时，都需要先通过该类的实例创建Session。而且不管预览还是拍照， 也都是由该对象的方法进行控制的，其中控制预览的方法为setRepeatingRequest()；控制拍照的方法为capture()</li>
+      <li>应用程序对整个摄像头管道的控制能力得到提升。每个拍摄请求会产生一个带有拍摄元数据的结果对象和一些图像数据缓 冲区</li>
+    </ol>
+  </li>
+</ul>
+
+<h1 id="fw代码">FW代码</h1>
+<p>后续分析</p>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/12/data_cameraAPI1_API2/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/06/11/data_Mac$Paste/">Mac 下的剪切操作</a>
                 </h2>
                 <div class="label">
                     <div class="label-card">
@@ -444,7 +766,7 @@
 
                 </div>
                 <div class="read-all">
-                    <a  href="/2019/06/11/data_tools/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                    <a  href="/2019/06/11/data_Mac$Paste/"><i class="fa fa-newspaper-o"></i>Read All</a>
                 </div>
                 <hr>
               </li>
@@ -476,11 +798,17 @@
                 </div>
                 <ul class="content-ul" recent>
                     
+                        <li><a href="/2019/06/14/data_Linux&Mac&history/">Linux 和 Mac下快速搜索历史命令</a></li>
+                    
                         <li><a href="/2019/06/14/data_androidtargetsdk/">关于minsdk, targetsdk, maxsdk</a></li>
                     
                         <li><a href="/2019/06/12/data_markdown%E8%AF%AD%E6%B3%95/">Markdown语法</a></li>
                     
-                        <li><a href="/2019/06/11/data_tools/">Mac 下的剪切操作</a></li>
+                        <li><a href="/2019/06/12/data_camerazsl/">Camera ZSL 拍照</a></li>
+                    
+                        <li><a href="/2019/06/12/data_cameraAPI1_API2/">Camera API1 - API2</a></li>
+                    
+                        <li><a href="/2019/06/11/data_Mac$Paste/">Mac 下的剪切操作</a></li>
                     
                 </ul>
             </div>
@@ -497,6 +825,15 @@
                         <a href="/category/#工具" class="categories-list-item" cate="工具">
                             <span class="name">
                                 工具
+                            </span>
+                            <span class="badge">3</span>
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <a href="/category/#Camera" class="categories-list-item" cate="Camera">
+                            <span class="name">
+                                Camera
                             </span>
                             <span class="badge">2</span>
                         </a>
@@ -533,7 +870,7 @@
                       
                       
                       
-                      <a href="/tag/#Mac" style="font-size: 9pt; color: #999;">Mac</a>
+                      <a href="/tag/#Mac" style="font-size: 13.5pt; color: #444;">Mac</a>
                     
                       
                       
@@ -547,14 +884,14 @@
                       
                       
                       
-                      <a href="/tag/#Camera" style="font-size: 9pt; color: #999;">Camera</a>
+                      <a href="/tag/#Camera" style="font-size: 18pt; color: #000;">Camera</a>
                     
                       
                       
                       
                       
                       
-                      <a href="/tag/#API" style="font-size: 9pt; color: #999;">API</a>
+                      <a href="/tag/#API" style="font-size: 13.5pt; color: #444;">API</a>
                     
                       
                       
@@ -562,6 +899,13 @@
                       
                       
                       <a href="/tag/#区别" style="font-size: 18pt; color: #000;">区别</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#拍照" style="font-size: 9pt; color: #999;">拍照</a>
                     
                       
                       
@@ -576,6 +920,27 @@
                       
                       
                       <a href="/tag/#SDK" style="font-size: 9pt; color: #999;">SDK</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Linux" style="font-size: 9pt; color: #999;">Linux</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#与" style="font-size: 9pt; color: #999;">与</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#搜索历史命令" style="font-size: 9pt; color: #999;">搜索历史命令</a>
                     
                 </div>
             </div>
