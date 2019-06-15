@@ -100,6 +100,8 @@
                 
                     
                 
+                    
+                
             </ul>
         </nav>
     </div>
@@ -112,6 +114,203 @@
         <small>当你的才华配不上你的理想的时候, 就静下心来好好学习!</small>
         <hr>
         <ul>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/06/15/data_video&audio&sync/">Video and Audio 的同步处理</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-15
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#Camera" title="Category: Camera" rel="category">Camera</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Video" title="Tag: Video" rel="tag">Video</a>&nbsp;
+    
+        <a href="/tag/#and" title="Tag: and" rel="tag">and</a>&nbsp;
+    
+        <a href="/tag/#Audio" title="Tag: Audio" rel="tag">Audio</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#问题描述" id="markdown-toc-问题描述">问题描述</a></li>
+  <li><a href="#思考" id="markdown-toc-思考">思考,</a></li>
+  <li><a href="#核心思路涉及公司代码-不能上传code" id="markdown-toc-核心思路涉及公司代码-不能上传code">核心思路(涉及公司代码, 不能上传code)</a></li>
+</ul>
+
+<blockquote>
+  <p>前言之需要了解的东西</p>
+</blockquote>
+
+<ul>
+  <li>
+    <p>MediaCodec
+MediaCodec类Android提供的用于访问低层多媒体编/解码器接口，它是Android低层多媒体架构的一部分，通常与MediaExtractor、MediaMuxer、AudioTrack结合使用，能够编解码诸如H.264、H.265、AAC、3gp等常见的音视频格式。广义而言，MediaCodec的工作原理就是处理输入数据以产生输出数据。具体来说，MediaCodec在编解码的过程中使用了一组输入/输出缓存区来同步或异步处理数据：首先，客户端向获取到的编解码器输入缓存区写入要编解码的数据并将其提交给编解码器，待编解码器处理完毕后将其转存到编码器的输出缓存区，同时收回客户端对输入缓存区的所有权；然后，客户端从获取到编解码输出缓存区读取编码好的数据进行处理，待处理完毕后编解码器收回客户端对输出缓存区的所有权。不断重复整个过程，直至编码器停止工作或者异常退出</p>
+  </li>
+  <li>
+    <p>MediaMuxer
+就是对音频和视频的混合. 来生成MP4 或 其它格式的文件</p>
+  </li>
+</ul>
+
+<p>没有数据源,比如是从surface出来的
+MediaCodec is typically used like this in asynchronous mode:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">MediaCodec</span> <span class="n">codec</span> <span class="o">=</span> <span class="n">MediaCodec</span><span class="o">.</span><span class="na">createByCodecName</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+ <span class="n">MediaFormat</span> <span class="n">mOutputFormat</span><span class="o">;</span> <span class="c1">// member variable</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">setCallback</span><span class="o">(</span><span class="k">new</span> <span class="n">MediaCodec</span><span class="o">.</span><span class="na">Callback</span><span class="o">()</span> <span class="o">{</span>
+  <span class="nd">@Override</span>
+  <span class="kt">void</span> <span class="nf">onInputBufferAvailable</span><span class="o">(</span><span class="n">MediaCodec</span> <span class="n">mc</span><span class="o">,</span> <span class="kt">int</span> <span class="n">inputBufferId</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ByteBuffer</span> <span class="n">inputBuffer</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getInputBuffer</span><span class="o">(</span><span class="n">inputBufferId</span><span class="o">);</span>
+    <span class="c1">// fill inputBuffer with valid data</span>
+    <span class="err">…</span>
+    <span class="n">codec</span><span class="o">.</span><span class="na">queueInputBuffer</span><span class="o">(</span><span class="n">inputBufferId</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@Override</span>
+  <span class="kt">void</span> <span class="nf">onOutputBufferAvailable</span><span class="o">(</span><span class="n">MediaCodec</span> <span class="n">mc</span><span class="o">,</span> <span class="kt">int</span> <span class="n">outputBufferId</span><span class="o">,</span> <span class="err">…</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ByteBuffer</span> <span class="n">outputBuffer</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputBuffer</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">);</span>
+    <span class="n">MediaFormat</span> <span class="n">bufferFormat</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputFormat</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">);</span> <span class="c1">// option A</span>
+    <span class="c1">// bufferFormat is equivalent to mOutputFormat</span>
+    <span class="c1">// outputBuffer is ready to be processed or rendered.</span>
+    <span class="err">…</span>
+    <span class="n">codec</span><span class="o">.</span><span class="na">releaseOutputBuffer</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="nd">@Override</span>
+  <span class="kt">void</span> <span class="nf">onOutputFormatChanged</span><span class="o">(</span><span class="n">MediaCodec</span> <span class="n">mc</span><span class="o">,</span> <span class="n">MediaFormat</span> <span class="n">format</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// Subsequent data will conform to new format.</span>
+    <span class="c1">// Can ignore if using getOutputFormat(outputBufferId)</span>
+    <span class="n">mOutputFormat</span> <span class="o">=</span> <span class="n">format</span><span class="o">;</span> <span class="c1">// option B</span>
+  <span class="o">}</span>
+
+  <span class="nd">@Override</span>
+  <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="err">…</span><span class="o">)</span> <span class="o">{</span>
+    <span class="err">…</span>
+  <span class="o">}</span>
+ <span class="o">});</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">configure</span><span class="o">(</span><span class="n">format</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+ <span class="n">mOutputFormat</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputFormat</span><span class="o">();</span> <span class="c1">// option B</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+ <span class="c1">// wait for processing to complete</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">stop</span><span class="o">();</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">release</span><span class="o">();</span>
+</code></pre></div></div>
+
+<p>个人认为在有数据源的情况下用这个, 比如已经有了图片要合成视频之类的
+MediaCodec is typically used like this in synchronous mode:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">MediaCodec</span> <span class="n">codec</span> <span class="o">=</span> <span class="n">MediaCodec</span><span class="o">.</span><span class="na">createByCodecName</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">configure</span><span class="o">(</span><span class="n">format</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+ <span class="n">MediaFormat</span> <span class="n">outputFormat</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputFormat</span><span class="o">();</span> <span class="c1">// option B</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+ <span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+  <span class="kt">int</span> <span class="n">inputBufferId</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">dequeueInputBuffer</span><span class="o">(</span><span class="n">timeoutUs</span><span class="o">);</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">inputBufferId</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ByteBuffer</span> <span class="n">inputBuffer</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getInputBuffer</span><span class="o">(</span><span class="err">…</span><span class="o">);</span>
+    <span class="c1">// fill inputBuffer with valid data</span>
+    <span class="err">…</span>
+    <span class="n">codec</span><span class="o">.</span><span class="na">queueInputBuffer</span><span class="o">(</span><span class="n">inputBufferId</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+  <span class="o">}</span>
+  <span class="kt">int</span> <span class="n">outputBufferId</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">dequeueOutputBuffer</span><span class="o">(</span><span class="err">…</span><span class="o">);</span>
+  <span class="k">if</span> <span class="o">(</span><span class="n">outputBufferId</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ByteBuffer</span> <span class="n">outputBuffer</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputBuffer</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">);</span>
+    <span class="n">MediaFormat</span> <span class="n">bufferFormat</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputFormat</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">);</span> <span class="c1">// option A</span>
+    <span class="c1">// bufferFormat is identical to outputFormat</span>
+    <span class="c1">// outputBuffer is ready to be processed or rendered.</span>
+    <span class="err">…</span>
+    <span class="n">codec</span><span class="o">.</span><span class="na">releaseOutputBuffer</span><span class="o">(</span><span class="n">outputBufferId</span><span class="o">,</span> <span class="err">…</span><span class="o">);</span>
+  <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">outputBufferId</span> <span class="o">==</span> <span class="n">MediaCodec</span><span class="o">.</span><span class="na">INFO_OUTPUT_FORMAT_CHANGED</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// Subsequent data will conform to new format.</span>
+    <span class="c1">// Can ignore if using getOutputFormat(outputBufferId)</span>
+    <span class="n">outputFormat</span> <span class="o">=</span> <span class="n">codec</span><span class="o">.</span><span class="na">getOutputFormat</span><span class="o">();</span> <span class="c1">// option B</span>
+  <span class="o">}</span>
+ <span class="o">}</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">stop</span><span class="o">();</span>
+ <span class="n">codec</span><span class="o">.</span><span class="na">release</span><span class="o">();</span>
+</code></pre></div></div>
+
+<blockquote>
+  <p>问题 请看下图, 从Hal上来的数据第一秒的时候是无效的video的, 结束的时候要求多录一秒钟</p>
+</blockquote>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/video_audio_sync.png" alt="avatar" /></p>
+
+<h2 id="问题描述">问题描述</h2>
+<p>正常情况下,如果录像开启的话,Video和Audio是同时传上来的, 然后同时合成, 类似mediarecorder
+这样的话就不用管, 视频和音频的同步问题了. 因为基本不会有延迟,
+但是假如开始的一秒钟我没有video数据.但是停止的时候是以audio停止的, 这样的话我的视频不就少了
+一秒的时间, 并且前面的video数据是垃圾帧数据</p>
+
+<h2 id="思考">思考,</h2>
+
+<p>那假如我多录一秒, 并且让前面的垃圾帧去掉在合成不就可以了,</p>
+
+<h2 id="核心思路涉及公司代码-不能上传code">核心思路(涉及公司代码, 不能上传code)</h2>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">mFirstVideoFrameTimeUs</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">//136899194595</span>
+                <span class="n">mFirstVideoFrameTimeUs</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="na">presentationTimeUs</span><span class="o">;</span>
+                <span class="c1">//第一帧为0</span>
+                <span class="n">info</span><span class="o">.</span><span class="na">presentationTimeUs</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+<span class="c1">//第一帧解码, return</span>
+                <span class="n">queueBuffer</span><span class="o">()</span>
+                <span class="k">return</span>
+            <span class="o">}</span>
+
+<span class="c1">//每次来算时间的gap 136899227943 这个数在增大,帧的时间戳肯定是在增大</span>
+<span class="kt">long</span> <span class="n">timeSinceVideoStart</span> <span class="o">=</span> <span class="n">info</span><span class="o">.</span><span class="na">presentationTimeUs</span> <span class="o">-</span> <span class="n">mFirstVideoFrameTimeUs</span><span class="o">;</span>
+<span class="c1">//33348 是33毫秒 比如1秒30帧, 1帧就是33毫秒左右</span>
+<span class="n">info</span><span class="o">.</span><span class="na">presentationTimeUs</span> <span class="o">=</span> <span class="n">timeSinceVideoStart</span> <span class="o">-</span> <span class="n">mVideoOffset</span><span class="o">;</span>
+
+<span class="err">接着我们就可以拿出来一副这样的数据</span>
+<span class="mi">0</span>         <span class="mi">1</span>         <span class="mi">2</span>          <span class="mi">3</span>          <span class="mi">4</span>
+<span class="mi">0</span>         <span class="mi">33348</span>     <span class="mi">66695</span>      <span class="mi">100042</span>     <span class="mi">133397</span>
+<span class="err">每一帧到第一帧的时间</span>
+
+</code></pre></div></div>
+<p>为什么要计算时间, 因为我们记录了开始的时间和结束的时间,然后我们录了多长时间也知道,停止的时候我们不就可以达到多录的目的了.</p>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/15/data_video&audio&sync/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
             
               <li>
                 <h2>
@@ -786,87 +985,6 @@
                 <hr>
               </li>
             
-              <li>
-                <h2>
-                  <a class="post-link" href="/2019/06/11/data_Mac$Paste/">Mac 下的剪切操作</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-06-11
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#工具" title="Category: 工具" rel="category">工具</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Mac" title="Tag: Mac" rel="tag">Mac</a>&nbsp;
-    
-        <a href="/tag/#剪切" title="Tag: 剪切" rel="tag">剪切</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    <ul id="markdown-toc">
-  <li><a href="#问题mac-下怎么剪切" id="markdown-toc-问题mac-下怎么剪切">问题(Mac 下怎么剪切)?</a></li>
-  <li><a href="#mac-下的剪切方式" id="markdown-toc-mac-下的剪切方式">Mac 下的剪切方式</a></li>
-  <li><a href="#mac快捷键大全" id="markdown-toc-mac快捷键大全">Mac快捷键大全</a></li>
-</ul>
-<h2 id="问题mac-下怎么剪切">问题(Mac 下怎么剪切)?</h2>
-<ul>
-  <li>Windows下为: Ctrl+x</li>
-  <li>Mac下是否为: Cmd+x （答案是否定的）</li>
-</ul>
-
-<h2 id="mac-下的剪切方式">Mac 下的剪切方式</h2>
-<ul>
-  <li>首先<code class="highlighter-rouge">Command+C</code> 复制文件</li>
-  <li>然后<code class="highlighter-rouge">Command＋Option＋V</code> 剪切文件</li>
-</ul>
-
-<h2 id="mac快捷键大全">Mac快捷键大全</h2>
-<p><a href="http://support.apple.com/kb/HT13 ... CN&amp;locale=zh_CN">Mac快捷键</a></p>
-
-<p><a href="http://support.apple.com/kb/HT13 ... CN&amp;locale=zh_CN">http://support.apple.com/kb/HT13 ... CN&amp;locale=zh_CN</a></p>
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2019/06/11/data_Mac$Paste/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
         </ul>
 
 
@@ -877,10 +995,10 @@
             <span class="previous disable"><i class="fa fa-angle-double-left"></i></span>
             <span class="previous disable"><i class="fa fa-angle-left"></i></span>
           
-          <span class="page_number ">1/1</span>
+          <span class="page_number ">1/2</span>
           
-            <span class="next disable"><i class="fa fa-angle-right"></i></span>
-            <span class="next disable"><i class="fa fa-angle-double-right"></i></span>
+            <a href="/page2" class="next"><i class="fa fa-angle-right"></i></a>
+            <a href="/page2" class="next"><i class="fa fa-angle-double-right"></i></a>
           
         </div>
     </div>
@@ -893,6 +1011,8 @@
                     Recent Posts
                 </div>
                 <ul class="content-ul" recent>
+                    
+                        <li><a href="/2019/06/15/data_video&audio&sync/">Video and Audio 的同步处理</a></li>
                     
                         <li><a href="/2019/06/14/data_Linux&Mac&history/">Linux 和 Mac下快速搜索历史命令</a></li>
                     
@@ -931,7 +1051,7 @@
                             <span class="name">
                                 Camera
                             </span>
-                            <span class="badge">2</span>
+                            <span class="badge">3</span>
                         </a>
                     </li>
                     
@@ -1037,6 +1157,27 @@
                       
                       
                       <a href="/tag/#搜索历史命令" style="font-size: 9pt; color: #999;">搜索历史命令</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Video" style="font-size: 9pt; color: #999;">Video</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#and" style="font-size: 9pt; color: #999;">and</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Audio" style="font-size: 9pt; color: #999;">Audio</a>
                     
                 </div>
             </div>

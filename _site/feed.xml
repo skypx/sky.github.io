@@ -5,9 +5,162 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 15 Jun 2019 18:05:20 +0800</pubDate>
-    <lastBuildDate>Sat, 15 Jun 2019 18:05:20 +0800</lastBuildDate>
+    <pubDate>Sat, 15 Jun 2019 20:21:15 +0800</pubDate>
+    <lastBuildDate>Sat, 15 Jun 2019 20:21:15 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>Video and Audio 的同步处理</title>
+        <description>&lt;ul id=&quot;markdown-toc&quot;&gt;
+  &lt;li&gt;&lt;a href=&quot;#问题描述&quot; id=&quot;markdown-toc-问题描述&quot;&gt;问题描述&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#思考&quot; id=&quot;markdown-toc-思考&quot;&gt;思考,&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#核心思路涉及公司代码-不能上传code&quot; id=&quot;markdown-toc-核心思路涉及公司代码-不能上传code&quot;&gt;核心思路(涉及公司代码, 不能上传code)&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  前言之需要了解的东西
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    MediaCodec
+MediaCodec类Android提供的用于访问低层多媒体编/解码器接口，它是Android低层多媒体架构的一部分，通常与MediaExtractor、MediaMuxer、AudioTrack结合使用，能够编解码诸如H.264、H.265、AAC、3gp等常见的音视频格式。广义而言，MediaCodec的工作原理就是处理输入数据以产生输出数据。具体来说，MediaCodec在编解码的过程中使用了一组输入/输出缓存区来同步或异步处理数据：首先，客户端向获取到的编解码器输入缓存区写入要编解码的数据并将其提交给编解码器，待编解码器处理完毕后将其转存到编码器的输出缓存区，同时收回客户端对输入缓存区的所有权；然后，客户端从获取到编解码输出缓存区读取编码好的数据进行处理，待处理完毕后编解码器收回客户端对输出缓存区的所有权。不断重复整个过程，直至编码器停止工作或者异常退出
+  &lt;/li&gt;
+  &lt;li&gt;
+    MediaMuxer
+就是对音频和视频的混合. 来生成MP4 或 其它格式的文件
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+没有数据源,比如是从surface出来的
+MediaCodec is typically used like this in asynchronous mode:
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createByCodecName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;MediaFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// member variable&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setCallback&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Callback&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onInputBufferAvailable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputBuffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getInputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// fill inputBuffer with valid data&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;queueInputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onOutputBufferAvailable&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputBuffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MediaFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bufferFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option A&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// bufferFormat is equivalent to mOutputFormat&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// outputBuffer is ready to be processed or rendered.&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;releaseOutputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onOutputFormatChanged&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mc&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MediaFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Subsequent data will conform to new format.&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Can ignore if using getOutputFormat(outputBufferId)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;mOutputFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option B&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nd&quot;&gt;@Override&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;onError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;});&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;configure&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;mOutputFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option B&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;c1&quot;&gt;// wait for processing to complete&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;release&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+个人认为在有数据源的情况下用这个, 比如已经有了图片要合成视频之类的
+MediaCodec is typically used like this in synchronous mode:
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createByCodecName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;configure&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;MediaFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option B&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(;;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;dequeueInputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;timeoutUs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;inputBuffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getInputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// fill inputBuffer with valid data&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;queueInputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;inputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;dequeueOutputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ByteBuffer&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;outputBuffer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;MediaFormat&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bufferFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option A&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// bufferFormat is identical to outputFormat&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// outputBuffer is ready to be processed or rendered.&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;releaseOutputBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;…&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;outputBufferId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MediaCodec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;INFO_OUTPUT_FORMAT_CHANGED&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Subsequent data will conform to new format.&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Can ignore if using getOutputFormat(outputBufferId)&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;outputFormat&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getOutputFormat&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// option B&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+ &lt;span class=&quot;n&quot;&gt;codec&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;release&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;blockquote&gt;
+  问题 请看下图, 从Hal上来的数据第一秒的时候是无效的video的, 结束的时候要求多录一秒钟
+&lt;/blockquote&gt;
+
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/video_audio_sync.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;h2 id=&quot;问题描述&quot;&gt;问题描述&lt;/h2&gt;
+正常情况下,如果录像开启的话,Video和Audio是同时传上来的, 然后同时合成, 类似mediarecorder
+这样的话就不用管, 视频和音频的同步问题了. 因为基本不会有延迟,
+但是假如开始的一秒钟我没有video数据.但是停止的时候是以audio停止的, 这样的话我的视频不就少了
+一秒的时间, 并且前面的video数据是垃圾帧数据
+
+&lt;h2 id=&quot;思考&quot;&gt;思考,&lt;/h2&gt;
+
+那假如我多录一秒, 并且让前面的垃圾帧去掉在合成不就可以了,
+
+&lt;h2 id=&quot;核心思路涉及公司代码-不能上传code&quot;&gt;核心思路(涉及公司代码, 不能上传code)&lt;/h2&gt;
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mFirstVideoFrameTimeUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+                &lt;span class=&quot;c1&quot;&gt;//136899194595&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;mFirstVideoFrameTimeUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;presentationTimeUs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+                &lt;span class=&quot;c1&quot;&gt;//第一帧为0&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;presentationTimeUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//第一帧解码, return&lt;/span&gt;
+                &lt;span class=&quot;n&quot;&gt;queueBuffer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt;
+            &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;//每次来算时间的gap 136899227943 这个数在增大,帧的时间戳肯定是在增大&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeSinceVideoStart&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;presentationTimeUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mFirstVideoFrameTimeUs&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//33348 是33毫秒 比如1秒30帧, 1帧就是33毫秒左右&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;presentationTimeUs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;timeSinceVideoStart&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mVideoOffset&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;err&quot;&gt;接着我们就可以拿出来一副这样的数据&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;          &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;          &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;
+&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;         &lt;span class=&quot;mi&quot;&gt;33348&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;66695&lt;/span&gt;      &lt;span class=&quot;mi&quot;&gt;100042&lt;/span&gt;     &lt;span class=&quot;mi&quot;&gt;133397&lt;/span&gt;
+&lt;span class=&quot;err&quot;&gt;每一帧到第一帧的时间&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+为什么要计算时间, 因为我们记录了开始的时间和结束的时间,然后我们录了多长时间也知道,停止的时候我们不就可以达到多录的目的了.
+</description>
+        <pubDate>Sat, 15 Jun 2019 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2019/06/15/data_video&audio&sync/</link>
+        <guid isPermaLink="true">http://localhost:4000/2019/06/15/data_video&audio&sync/</guid>
+        
+        <category>Video</category>
+        
+        <category>and</category>
+        
+        <category>Audio</category>
+        
+        
+        <category>Camera</category>
+        
+      </item>
     
       <item>
         <title>Linux 和 Mac下快速搜索历史命令</title>
