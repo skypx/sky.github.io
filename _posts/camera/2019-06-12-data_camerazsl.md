@@ -55,7 +55,7 @@ tags: Camera 拍照
   mQueue.add(Image)
   ```
   [参考CTS](http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/utils/src/android/hardware/camera2/cts/CameraTestUtils.java#286)
-  
+
   6. 设置ImageWriter
   ```java
   这个surface其实就是设置inputconfig的时候底层创建的surface
