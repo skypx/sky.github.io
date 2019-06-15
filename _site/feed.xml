@@ -5,8 +5,8 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 14 Jun 2019 22:04:44 +0800</pubDate>
-    <lastBuildDate>Fri, 14 Jun 2019 22:04:44 +0800</lastBuildDate>
+    <pubDate>Sat, 15 Jun 2019 18:05:20 +0800</pubDate>
+    <lastBuildDate>Sat, 15 Jun 2019 18:05:20 +0800</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
     
       <item>
@@ -207,6 +207,8 @@ Google Play 上发布了一个在其清单中声明了 maxSdkVersion=”5” 的
 &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;如果换行的话在行末加两个空格&lt;/span&gt;
 
 &lt;span class=&quot;mi&quot;&gt;7&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&amp;gt;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;这是引用&lt;/span&gt;
+
+&lt;span class=&quot;mi&quot;&gt;8&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;字体加粗用&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;字体&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;**&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h1 id=&quot;这个网站也有一些命令&quot;&gt;这个网站也有一些命令&lt;/h1&gt;
@@ -234,6 +236,10 @@ Google Play 上发布了一个在其清单中声明了 maxSdkVersion=”5” 的
         <title>Camera ZSL 拍照</title>
         <description>&lt;ul id=&quot;markdown-toc&quot;&gt;
   &lt;li&gt;&lt;a href=&quot;#什么是zsl&quot; id=&quot;markdown-toc-什么是zsl&quot;&gt;什么是ZSL&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#一normal-mode&quot; id=&quot;markdown-toc-一normal-mode&quot;&gt;一．Normal mode：&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#二-zsl-mode&quot; id=&quot;markdown-toc-二-zsl-mode&quot;&gt;二． ZSL Mode：&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#zsl-分为两种modesingle-shotburst-mode&quot; id=&quot;markdown-toc-zsl-分为两种modesingle-shotburst-mode&quot;&gt;Zsl 分为两种mode：single shot；burst mode&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;#三拍照具体实现过程&quot; id=&quot;markdown-toc-三拍照具体实现过程&quot;&gt;三．拍照具体实现过程&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#针对api1来说&quot; id=&quot;markdown-toc-针对api1来说&quot;&gt;针对API1来说&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#针对api2来说&quot; id=&quot;markdown-toc-针对api2来说&quot;&gt;针对API2来说&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;#具体的code方式&quot; id=&quot;markdown-toc-具体的code方式&quot;&gt;具体的code方式&lt;/a&gt;&lt;/li&gt;
@@ -249,8 +255,63 @@ Google Play 上发布了一个在其清单中声明了 maxSdkVersion=”5” 的
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;a href=&quot;http://blog.chinaunix.net/uid-7213935-id-5753468.html&quot;&gt;ZSL链接&lt;/a&gt;
+&lt;h1 id=&quot;一normal-mode&quot;&gt;一．Normal mode：&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;一般情况下，拍照流程如下，从图中我们可以看到data flow 以及shutter lag （延迟）是如何产生的&lt;/li&gt;
+&lt;/ul&gt;
 
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/normal_take_picture.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/normal_data_flow.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;h1 id=&quot;二-zsl-mode&quot;&gt;二． ZSL Mode：&lt;/h1&gt;
+
+通过zsl 技术，最大程度上减小了这种延迟，如下图：
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zsl_take_picture.png&quot; alt=&quot;avatar&quot; /&gt;
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zsl_data_flow.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;h1 id=&quot;zsl-分为两种modesingle-shotburst-mode&quot;&gt;Zsl 分为两种mode：single shot；burst mode&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;single shot：&lt;/li&gt;
+&lt;/ol&gt;
+
+预览之后，sensor 和VFE 会产生快照和预览帧，并且会把最新的一些帧保留在图像buffer中。一旦“取图”事件被触发，系统就会在第一时间内从图像buffer中把相关的图像找出并返回给用户，这就是ZSL,零秒延迟。
+
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zsl_single_shot.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;burst shot：&lt;/li&gt;
+&lt;/ol&gt;
+
+Burst mode 是single shot 特征的自然延伸。此功能允许用户捕获的不仅是当前帧，但也有几个帧之前和之后的当前帧的少数几个帧，从而捕捉到一个序列的图像到内存。这将为用户提供不同的快照时间，从中选择一个或多个帧来保存。应用了多少帧的选择自由是多少追溯帧和未来帧在记忆的局限性上，追溯和未来帧是相对于真正的快门时间的。
+
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zsl_burst_shot.png&quot; alt=&quot;avatar&quot; /&gt;
+
+&lt;h1 id=&quot;三拍照具体实现过程&quot;&gt;三．拍照具体实现过程&lt;/h1&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    Implementation without ZSL：
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/normal_hal.png&quot; alt=&quot;avatar&quot; /&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    Implementation with ZSL：
+&lt;img src=&quot;https://github.com/skypx/BlogResource/raw/master/camera/zsl_hal.png&quot; alt=&quot;avatar&quot; /&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+参考链接:
+
+&lt;a href=&quot;http://blog.chinaunix.net/uid-7213935-id-5753468.html&quot;&gt;http://blog.chinaunix.net/uid-7213935-id-5753468.html&lt;/a&gt;
+&lt;a href=&quot;https://blog.csdn.net/kris_fei/article/details/77057473&quot;&gt;https://blog.csdn.net/kris_fei/article/details/77057473&lt;/a&gt;
+
+&lt;blockquote&gt;
+  一篇关于摄像头基础部分的文章:高通Camera架构
+&lt;/blockquote&gt;
+&lt;a href=&quot;https://www.cnblogs.com/whw19818/p/5853407.html&quot;&gt;https://www.cnblogs.com/whw19818/p/5853407.html&lt;/a&gt;
+
+——————————————&lt;strong&gt;下面说下Code的方式&lt;/strong&gt;—————————————————-
 &lt;h1 id=&quot;针对api1来说&quot;&gt;针对API1来说&lt;/h1&gt;
 &lt;ul&gt;
   &lt;li&gt;高通会提供关于ZSL的patch给厂商. 厂商通过设置 &lt;code class=&quot;highlighter-rouge&quot;&gt;setZSLMode&lt;/code&gt; 默认是隐藏的方法. 具体对于队列的维护
