@@ -117,6 +117,195 @@
             
               <li>
                 <h2>
+                  <a class="post-link" href="/2019/06/20/data_Mac$Gedit/">Mac 下安装gedit</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-20
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#工具" title="Category: 工具" rel="category">工具</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Mac" title="Tag: Mac" rel="tag">Mac</a>&nbsp;
+    
+        <a href="/tag/#Gedit" title="Tag: Gedit" rel="tag">Gedit</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    <ul id="markdown-toc">
+  <li><a href="#1可通过-httpsgeditensoftoniccommac-安装" id="markdown-toc-1可通过-httpsgeditensoftoniccommac-安装">1.可通过 https://gedit.en.softonic.com/mac 安装</a></li>
+  <li><a href="#2通过下面的连接安装" id="markdown-toc-2通过下面的连接安装">2.通过下面的连接安装</a></li>
+</ul>
+
+<blockquote>
+  <p>Mac 下安装 Gedit</p>
+</blockquote>
+
+<h2 id="1可通过-httpsgeditensoftoniccommac-安装">1.可通过 <a href="https://gedit.en.softonic.com/mac">https://gedit.en.softonic.com/mac</a> 安装</h2>
+
+<ol>
+  <li>open -e .bash_profile</li>
+  <li>alias gedit=”sudo open -a gedit”</li>
+  <li>source .bash_profile</li>
+  <li>
+    <p>如果出现打不开“gedit”，因为它来自身份不明的开发者。的问题：参考</p>
+
+    <p><a href="https://jingyan.baidu.com/article/f71d60377960651ab741d140.html">https://jingyan.baidu.com/article/f71d60377960651ab741d140.html</a></p>
+  </li>
+</ol>
+
+<p>关于open 命令</p>
+
+<ul>
+  <li>open，使用关联的程序打开文件，例：open a.txt会用文本编辑打开a.txt，open b.jpg会使用预览打开b.jpg</li>
+  <li>open -e，强制使用文本编辑程序打开文件</li>
+  <li>open -a，自行选择程序打开文件，例：open -a Preview b.jpg会使用预览打开b.jpg，另外使用此命令输入已安装的程序名可直接打开，而open则需要知道程序存放的路径才行，例：open -a Preview等同于open /Applications/Preview.app</li>
+</ul>
+
+<p>但是我用这种方式安装之后打开的一次之后，在次打开的话一定要完全退出上次的软件， 所以很不舒服，下面介绍第二种方式安装</p>
+
+<h2 id="2通过下面的连接安装">2.通过下面的连接安装</h2>
+
+<p><a href="http://macappstore.org/gedit/">http://macappstore.org/gedit/</a></p>
+
+<p>我并没有用<strong>brew cask install gedit</strong>这个命令安装
+用<strong>brew install gedit</strong>这个命令，会安装很多依赖，大约5分钟左右</p>
+
+<p>然后就可以gedit文件了，这个界面比通过<a href="https://gedit.en.softonic.com/mac">softonic</a>这种方式的安装界面漂亮多了</p>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/20/data_Mac$Gedit/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
+                  <a class="post-link" href="/2019/06/20/data_Linux$Mac&Terminal%E9%A2%9C%E8%89%B2%E4%BF%AE%E6%94%B9/">Linux 与 Mac下的Terminal颜色修改</a>
+                </h2>
+                <div class="label">
+                    <div class="label-card">
+                        <i class="fa fa-calendar"></i>2019-06-20
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+                    <div class="label-card">
+                        
+                    </div>
+
+                    <div class="label-card">
+                    
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#工具" title="Category: 工具" rel="category">工具</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+                    </div>
+
+                    <div class="label-card">
+                    
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#Terminal" title="Tag: Terminal" rel="tag">Terminal</a>
+    
+  
+
+</span>
+
+                    </div>
+                </div>
+                <div class="excerpt">
+                    
+<ul>
+  <li>默认的PS1 配置</li>
+</ul>
+
+<p>代码块
+英文状态下直接按左上角就可以，一定是英文状态
+中文状态下shit+option+左上角，</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">echo</span> <span class="n">$PS1</span>
+<span class="err">\</span><span class="nl">h:</span><span class="err">\</span><span class="n">W</span> <span class="err">\</span><span class="n">u</span><span class="err">\$</span>
+</code></pre></div></div>
+<p><img src="https://github.com/skypx/BlogResource/raw/master/other/normalterminal.png" alt="avatar" /></p>
+
+<ul>
+  <li>修改PS1的配置文件</li>
+</ul>
+
+<ol>
+  <li>Linux系统中修改.bashrc, 添加下面的代码
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">PS1</span><span class="o">=</span><span class="err">'$</span><span class="o">{</span><span class="nl">debian_chroot:</span><span class="o">+(</span><span class="n">$debian_chroot</span><span class="o">)}</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">]</span><span class="mi">2</span><span class="o">;</span><span class="err">\</span><span class="n">w</span><span class="err">\</span><span class="n">a</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">35</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">u</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">37</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">@\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">34</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">h</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">00</span><span class="n">m</span><span class="err">\</span><span class="o">]:</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">33</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">w</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">00</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">36</span><span class="n">m</span><span class="err">\</span><span class="o">][</span><span class="err">\</span><span class="n">t</span> <span class="err">\</span><span class="n">d</span><span class="o">]</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">32</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="n">No</span><span class="o">.</span><span class="err">\#</span><span class="o">(</span><span class="err">\</span><span class="o">!)</span><span class="err">\</span><span class="n">n</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">31</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\$</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">37</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">'</span>
+</code></pre></div>    </div>
+  </li>
+  <li>Mac中修改.bash_profile. 同样添加上面的代码
+下面的这是是我的配置，我只是把上面的代码颜色改了
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">export</span> <span class="n">PS1</span><span class="o">=</span><span class="err">'$</span><span class="o">{</span><span class="nl">debian_chroot:</span><span class="o">+(</span><span class="n">$debian_chroot</span><span class="o">)}</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">]</span><span class="mi">2</span><span class="o">;</span><span class="err">\</span><span class="n">w</span><span class="err">\</span><span class="n">a</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">35</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">u</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">35</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">@\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">35</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">h</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">35</span><span class="n">m</span><span class="err">\</span><span class="o">]:</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">36</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="n">w</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">00</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">36</span><span class="n">m</span><span class="err">\</span><span class="o">][</span><span class="err">\</span><span class="n">t</span> <span class="err">\</span><span class="n">d</span><span class="o">]</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">32</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="n">No</span><span class="o">.</span><span class="err">\#</span><span class="o">(</span><span class="err">\</span><span class="o">!)</span><span class="err">\</span><span class="n">n</span><span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="n">e</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">31</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">\$</span> <span class="err">\</span><span class="o">[</span><span class="err">\</span><span class="mo">033</span><span class="o">[</span><span class="mo">01</span><span class="o">;</span><span class="mi">37</span><span class="n">m</span><span class="err">\</span><span class="o">]</span><span class="err">'</span>
+</code></pre></div>    </div>
+    <p><img src="https://github.com/skypx/BlogResource/raw/master/other/changeterminal.png" alt="avatar" /></p>
+  </li>
+</ol>
+
+<p>这样就可以显示时间，和历史命令的是第几条的terminal了，是不是很酷</p>
+
+                </div>
+                <div class="read-all">
+                    <a  href="/2019/06/20/data_Linux$Mac&Terminal%E9%A2%9C%E8%89%B2%E4%BF%AE%E6%94%B9/"><i class="fa fa-newspaper-o"></i>Read All</a>
+                </div>
+                <hr>
+              </li>
+            
+              <li>
+                <h2>
                   <a class="post-link" href="/2019/06/15/data_video&audio&sync/">Video and Audio 的同步处理</a>
                 </h2>
                 <div class="label">
@@ -667,324 +856,6 @@ MediaCodec is typically used like this in synchronous mode:</p>
                 <hr>
               </li>
             
-              <li>
-                <h2>
-                  <a class="post-link" href="/2019/06/12/data_camerazsl/">Camera ZSL 拍照</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-06-12
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Camera" title="Category: Camera" rel="category">Camera</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Camera" title="Tag: Camera" rel="tag">Camera</a>&nbsp;
-    
-        <a href="/tag/#拍照" title="Tag: 拍照" rel="tag">拍照</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    <ul id="markdown-toc">
-  <li><a href="#什么是zsl" id="markdown-toc-什么是zsl">什么是ZSL</a></li>
-  <li><a href="#一normal-mode" id="markdown-toc-一normal-mode">一．Normal mode：</a></li>
-  <li><a href="#二-zsl-mode" id="markdown-toc-二-zsl-mode">二． ZSL Mode：</a></li>
-  <li><a href="#zsl-分为两种modesingle-shotburst-mode" id="markdown-toc-zsl-分为两种modesingle-shotburst-mode">Zsl 分为两种mode：single shot；burst mode</a></li>
-  <li><a href="#三拍照具体实现过程" id="markdown-toc-三拍照具体实现过程">三．拍照具体实现过程</a></li>
-  <li><a href="#针对api1来说" id="markdown-toc-针对api1来说">针对API1来说</a></li>
-  <li><a href="#针对api2来说" id="markdown-toc-针对api2来说">针对API2来说</a></li>
-  <li><a href="#具体的code方式" id="markdown-toc-具体的code方式">具体的code方式</a></li>
-</ul>
-
-<h1 id="什么是zsl">什么是ZSL</h1>
-<ul>
-  <li>
-    <p>ZSL (zero shutter lag)：零秒延迟</p>
-  </li>
-  <li>
-    <p>在日常生活中，使用手机camera拍照的时候往往会有一些延迟的体验。ZSL，就是为了消除这种延迟，提供一种“拍即视”的体验而被开发出来。</p>
-  </li>
-</ul>
-
-<h1 id="一normal-mode">一．Normal mode：</h1>
-<ul>
-  <li>一般情况下，拍照流程如下，从图中我们可以看到data flow 以及shutter lag （延迟）是如何产生的</li>
-</ul>
-
-<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_take_picture.png" alt="avatar" /></p>
-
-<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_data_flow.png" alt="avatar" /></p>
-
-<h1 id="二-zsl-mode">二． ZSL Mode：</h1>
-
-<p>通过zsl 技术，最大程度上减小了这种延迟，如下图：
-<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_take_picture.png" alt="avatar" />
-<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_data_flow.png" alt="avatar" /></p>
-
-<h1 id="zsl-分为两种modesingle-shotburst-mode">Zsl 分为两种mode：single shot；burst mode</h1>
-
-<ol>
-  <li>single shot：</li>
-</ol>
-
-<p>预览之后，sensor 和VFE 会产生快照和预览帧，并且会把最新的一些帧保留在图像buffer中。一旦“取图”事件被触发，系统就会在第一时间内从图像buffer中把相关的图像找出并返回给用户，这就是ZSL,零秒延迟。</p>
-
-<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_single_shot.png" alt="avatar" /></p>
-
-<ol>
-  <li>burst shot：</li>
-</ol>
-
-<p>Burst mode 是single shot 特征的自然延伸。此功能允许用户捕获的不仅是当前帧，但也有几个帧之前和之后的当前帧的少数几个帧，从而捕捉到一个序列的图像到内存。这将为用户提供不同的快照时间，从中选择一个或多个帧来保存。应用了多少帧的选择自由是多少追溯帧和未来帧在记忆的局限性上，追溯和未来帧是相对于真正的快门时间的。</p>
-
-<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_burst_shot.png" alt="avatar" /></p>
-
-<h1 id="三拍照具体实现过程">三．拍照具体实现过程</h1>
-
-<ol>
-  <li>
-    <p>Implementation without ZSL：
-<img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_hal.png" alt="avatar" /></p>
-  </li>
-  <li>
-    <p>Implementation with ZSL：
-<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_hal.png" alt="avatar" /></p>
-  </li>
-</ol>
-
-<p>参考链接:</p>
-
-<p><a href="http://blog.chinaunix.net/uid-7213935-id-5753468.html">http://blog.chinaunix.net/uid-7213935-id-5753468.html</a>
-<a href="https://blog.csdn.net/kris_fei/article/details/77057473">https://blog.csdn.net/kris_fei/article/details/77057473</a></p>
-
-<blockquote>
-  <p>一篇关于摄像头基础部分的文章:高通Camera架构</p>
-</blockquote>
-<p><a href="https://www.cnblogs.com/whw19818/p/5853407.html">https://www.cnblogs.com/whw19818/p/5853407.html</a></p>
-
-<p>——————————————<strong>下面说下Code的方式</strong>—————————————————-</p>
-<h1 id="针对api1来说">针对API1来说</h1>
-<ul>
-  <li>高通会提供关于ZSL的patch给厂商. 厂商通过设置 <code class="highlighter-rouge">setZSLMode</code> 默认是隐藏的方法. 具体对于队列的维护
-放在了Framework层去处理</li>
-</ul>
-
-<h1 id="针对api2来说">针对API2来说</h1>
-<ul>
-  <li>
-    <p>Goolge建议对于缓存队列的处理放在App 层来处理 具体可以参考如下的链接
-<a href="http://androidxref.com/9.0.0_r3/search?q=%22zsl%22&amp;project=packages">Camera2 ZSL</a></p>
-
-    <p>这里要注意的是需要设置模板<code class="highlighter-rouge">TEMPLATE_ZERO_SHUTTER_LAG</code> 来通知HAL切换模板</p>
-  </li>
-</ul>
-
-<h1 id="具体的code方式">具体的code方式</h1>
-
-<ol>
-  <li>创建Session的方式 <code class="highlighter-rouge">createReprocessableCaptureSessionByConfigurations</code>
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">camera</span><span class="o">.</span><span class="na">createReprocessableCaptureSessionByConfigurations</span><span class="o">(</span><span class="n">inputConfiguration</span><span class="o">,</span> <span class="n">outputs</span><span class="o">,</span><span class="n">sessionListener</span><span class="o">,</span> <span class="n">handler</span><span class="o">);</span>
-</code></pre></div>    </div>
-  </li>
-  <li>设置<code class="highlighter-rouge">InputConfiguration</code>, 还有<code class="highlighter-rouge">ImageWrite</code>
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">InputConfiguration</span> <span class="n">inputConfiguration</span> <span class="o">=</span> <span class="k">new</span> <span class="n">InputConfiguration</span>
-                           <span class="n">Size</span><span class="o">.</span><span class="na">width</span><span class="o">(),</span> <span class="n">Size</span><span class="o">.</span><span class="na">height</span><span class="o">(),</span>
-                           <span class="n">ImageFormat</span><span class="o">.</span><span class="na">YUV_420_888</span><span class="o">;</span>
-</code></pre></div>    </div>
-  </li>
-  <li>创建新的ImageReader来配置和InputConfiguration一样的参数
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">ImageReader</span> <span class="n">mZslImageReader</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ImageReader</span><span class="o">(</span><span class="n">Size</span><span class="o">.</span><span class="na">width</span><span class="o">(),</span> <span class="n">Size</span><span class="o">.</span><span class="na">height</span><span class="o">(),</span>
-                           <span class="n">ImageFormat</span><span class="o">.</span><span class="na">PRIVATE</span><span class="o">);</span>
-</code></pre></div>    </div>
-  </li>
-  <li>把zslIamgereader传入setRepeatingBurst, 这样就可以获取这个流了
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">CaptureRequest</span><span class="o">.</span><span class="na">Builder</span> <span class="n">reqBuilder</span> <span class="o">=</span> <span class="n">cameraDevice</span><span class="o">.</span><span class="na">createCaptureRequest</span><span class="o">(</span><span class="n">templateType</span><span class="o">);</span>
-  <span class="n">reqBuilder</span><span class="o">.</span><span class="na">addTarget</span><span class="o">(</span><span class="n">mZslImageReader</span><span class="o">.</span><span class="na">getSurface</span><span class="o">);</span>
-  <span class="n">mCaptureSession</span><span class="o">.</span><span class="na">setRepeatingBurst</span><span class="o">(</span><span class="n">reqBuilder</span><span class="o">....);</span>
-</code></pre></div>    </div>
-  </li>
-  <li>设置ZslImageReader的callback. onImageAvailable 可用的时候放入对列
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kd">private</span> <span class="kd">final</span> <span class="n">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="n">Image</span><span class="o">&gt;</span> <span class="n">mQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="n">Image</span><span class="o">&gt;();</span>
-  <span class="n">mQueue</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">Image</span><span class="o">)</span>
-</code></pre></div>    </div>
-    <p><a href="http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/utils/src/android/hardware/camera2/cts/CameraTestUtils.java#286">参考CTS</a></p>
-  </li>
-  <li>设置ImageWriter
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="err">这个</span><span class="n">surface</span><span class="err">其实就是设置</span><span class="n">inputconfig</span><span class="err">的时候底层创建的</span><span class="n">surface</span>
-  <span class="n">ImageWriter</span> <span class="n">mImageWriter</span> <span class="o">=</span> <span class="n">ImageWriter</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">session</span><span class="o">.</span><span class="na">getInputSurface</span><span class="o">(),</span> <span class="mi">2</span><span class="o">);</span>
-</code></pre></div>    </div>
-  </li>
-  <li>把LinkedBlockingQueue里面的image送给下面去重新操作, 同时把result也放入进去
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">mImageWriter</span><span class="o">.</span><span class="na">queueInputImage</span><span class="o">(</span><span class="n">mQueue</span><span class="o">.</span><span class="na">getImage</span><span class="o">());</span><span class="c1">//伪代码</span>
-  <span class="n">captureRequestBuilder</span> <span class="o">=</span> <span class="n">mCameraDevice</span><span class="o">.</span>
-                           <span class="nf">createReprocessCaptureRequest</span><span class="o">(</span><span class="n">mQueue</span><span class="o">.</span><span class="na">getResult</span><span class="o">());</span>
-</code></pre></div>    </div>
-  </li>
-  <li>重新去拍照, 用图片的ImageReader
-    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">captureRequestBuilder</span><span class="o">.</span><span class="na">addTarget</span><span class="o">(</span><span class="n">mCaptureImageReader</span><span class="o">.</span><span class="na">getSurface</span><span class="o">());</span>
-  <span class="n">mCaptureSession</span><span class="o">.</span><span class="na">capture</span><span class="o">(</span><span class="n">captureRequestBuilder</span><span class="o">.</span><span class="na">build</span><span class="o">(),</span>
-                           <span class="n">captureRequestCallback</span><span class="o">,</span> <span class="n">mCameraDeviceHandler</span><span class="o">.</span><span class="na">getDeviceThreadHandler</span><span class="o">());</span>
-</code></pre></div>    </div>
-  </li>
-</ol>
-
-<blockquote>
-  <p>我整理了一张图片大致流程是这样的
-  <img src="https://github.com/skypx/BlogResource/raw/master/camera/zslnew.png" alt="avatar" /></p>
-</blockquote>
-
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2019/06/12/data_camerazsl/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
-              <li>
-                <h2>
-                  <a class="post-link" href="/2019/06/12/data_cameraAPI1_API2/">Camera API1 - API2</a>
-                </h2>
-                <div class="label">
-                    <div class="label-card">
-                        <i class="fa fa-calendar"></i>2019-06-12
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-                    <div class="label-card">
-                        
-                    </div>
-
-                    <div class="label-card">
-                    
-
-
-<!-- <span class="point">•</span> -->
-<span class="categories">
-  <i class="fa fa-th-list"></i>
-  
-    
-        <a href="/category/#Camera" title="Category: Camera" rel="category">Camera</a>
-    
-  
-
-  <!-- <span class="point">•</span> -->
-</span>
-
-
-                    </div>
-
-                    <div class="label-card">
-                    
-<!-- <span class="point">•</span> -->
-<span class="pageTag">
-  <i class="fa fa-tags"></i>
-  
-    
-        <a href="/tag/#Camera" title="Tag: Camera" rel="tag">Camera</a>&nbsp;
-    
-        <a href="/tag/#API" title="Tag: API" rel="tag">API</a>&nbsp;
-    
-        <a href="/tag/#区别" title="Tag: 区别" rel="tag">区别</a>
-    
-  
-
-</span>
-
-                    </div>
-                </div>
-                <div class="excerpt">
-                    <ul id="markdown-toc">
-  <li><a href="#api-概述" id="markdown-toc-api-概述">API 概述</a></li>
-  <li><a href="#api1-和-api2的流程对比" id="markdown-toc-api1-和-api2的流程对比">API1 和 API2的流程对比</a></li>
-  <li><a href="#java-层代码比较" id="markdown-toc-java-层代码比较">Java 层代码比较</a></li>
-  <li><a href="#camera-api1-主要类" id="markdown-toc-camera-api1-主要类">Camera API1 主要类</a></li>
-  <li><a href="#fw代码" id="markdown-toc-fw代码">FW代码</a></li>
-</ul>
-
-<h1 id="api-概述">API 概述</h1>
-
-<p>Android5.0之后，增加了Cameraapi2接口，api2和api1在调用流程上差异很大，功能上api2提供了更加细致的控制功能，api1子系统被设计为具备高级控制功能的黑盒，能够发出请求，但无法控制图像的缓冲区和元数据，无法再帧层面控制传感器的特性，无法通过访问和修改元数据信息（如3A信息）对捕获的帧应用任何增强功能，重新设计api2旨在大幅提高应用程序控制摄像头子系统的能力，性能也有一定的提升。</p>
-
-<h1 id="api1-和-api2的流程对比">API1 和 API2的流程对比</h1>
-
-<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/ape_fwk_camera.png" alt="avatar" /></p>
-
-<ul>
-  <li>从图中可以看出在API1中java-&gt; jni -&gt; camera service -&gt; Hal, 但是在API2中 java -&gt; camera service -&gt; Hal
-为什么呢? 这个地方我们可以单独放在后面讲
-就是说java不通过jni可以直接和c++通信. 类似aidl的方式, 链接在下面
-<a href="https://android.googlesource.com/platform/system/tools/aidl/+/brillo-m10-dev/docs/aidl-cpp.md">https://android.googlesource.com/platform/system/tools/aidl/+/brillo-m10-dev/docs/aidl-cpp.md</a></li>
-</ul>
-
-<h1 id="java-层代码比较">Java 层代码比较</h1>
-<h1 id="camera-api1-主要类">Camera API1 主要类</h1>
-
-<ul>
-  <li>Camera api1调用流程比较直观，也利于理解一些，应用程序实例化camera这一个类就可以控制摄像头子系统
-    <ol>
-      <li>Camera，api1主要类。通过类的这些startPreview、takePicture、AutoFocus等标准的接口实现</li>
-      <li>Parameters，参数设置，通过camera内部类Parameters操作实现，如设置帧率，设置图片格式，预览尺寸等</li>
-      <li>CameraInfo，元数据获取，通过camera内部类CameraInfo实现，这里只能获取不能修改</li>
-    </ol>
-  </li>
-  <li>Camera API2 主要类
-    <ol>
-      <li>Camera api2在应用层的调用要复杂一些，定义的类也比较多，这也说明对摄像头子系统控制的更加细腻了</li>
-      <li>CameraManager：摄像头管理器。这是一个全新的系统管理器，专门用于检测系统摄像头、打开系统摄像头。除此之外，调用CameraManager的getCameraCharacteristics(String)方法即可获取指定摄像头的相关特性</li>
-      <li>CameraCharacteristics：摄像头特性。该对象通过CameraManager来获取，用于描述特定摄像头所支持的各种特性</li>
-      <li>CameraDevice：代表系统摄像头。该类的功能类似于早期的Camera类</li>
-      <li>CameraCaptureSession：这是一个非常重要的API，当程序需要预览、拍照时，都需要先通过该类的实例创建Session。而且不管预览还是拍照， 也都是由该对象的方法进行控制的，其中控制预览的方法为setRepeatingRequest()；控制拍照的方法为capture()</li>
-      <li>应用程序对整个摄像头管道的控制能力得到提升。每个拍摄请求会产生一个带有拍摄元数据的结果对象和一些图像数据缓 冲区</li>
-    </ol>
-  </li>
-</ul>
-
-<h1 id="fw代码">FW代码</h1>
-<p>后续分析</p>
-
-                </div>
-                <div class="read-all">
-                    <a  href="/2019/06/12/data_cameraAPI1_API2/"><i class="fa fa-newspaper-o"></i>Read All</a>
-                </div>
-                <hr>
-              </li>
-            
         </ul>
 
 
@@ -1011,6 +882,10 @@ MediaCodec is typically used like this in synchronous mode:</p>
                     Recent Posts
                 </div>
                 <ul class="content-ul" recent>
+                    
+                        <li><a href="/2019/06/20/data_Mac$Gedit/">Mac 下安装gedit</a></li>
+                    
+                        <li><a href="/2019/06/20/data_Linux$Mac&Terminal%E9%A2%9C%E8%89%B2%E4%BF%AE%E6%94%B9/">Linux 与 Mac下的Terminal颜色修改</a></li>
                     
                         <li><a href="/2019/06/15/data_video&audio&sync/">Video and Audio 的同步处理</a></li>
                     
@@ -1042,7 +917,7 @@ MediaCodec is typically used like this in synchronous mode:</p>
                             <span class="name">
                                 工具
                             </span>
-                            <span class="badge">3</span>
+                            <span class="badge">5</span>
                         </a>
                     </li>
                     
@@ -1086,7 +961,7 @@ MediaCodec is typically used like this in synchronous mode:</p>
                       
                       
                       
-                      <a href="/tag/#Mac" style="font-size: 13.5pt; color: #444;">Mac</a>
+                      <a href="/tag/#Mac" style="font-size: 18pt; color: #000;">Mac</a>
                     
                       
                       
@@ -1178,6 +1053,20 @@ MediaCodec is typically used like this in synchronous mode:</p>
                       
                       
                       <a href="/tag/#Audio" style="font-size: 9pt; color: #999;">Audio</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Terminal" style="font-size: 9pt; color: #999;">Terminal</a>
+                    
+                      
+                      
+                      
+                      
+                      
+                      <a href="/tag/#Gedit" style="font-size: 9pt; color: #999;">Gedit</a>
                     
                 </div>
             </div>
