@@ -7,7 +7,7 @@
 
 # Site settings
 title: Skypx
-brief-intro: Talk is cheap，show me the code
+brief-intro: 观心知天下, 不露亦锋芒
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://skypx.github.io" # the base hostname & protocol for your site
 
