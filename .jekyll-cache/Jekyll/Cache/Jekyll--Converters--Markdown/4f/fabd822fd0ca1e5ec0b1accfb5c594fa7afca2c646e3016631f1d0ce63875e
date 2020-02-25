@@ -1,0 +1,394 @@
+I"+<ul id="markdown-toc">
+  <li><a href="#41-前言" id="markdown-toc-41-前言">4.1 前言</a></li>
+  <li><a href="#42-启动" id="markdown-toc-42-启动">4.2 启动</a></li>
+  <li><a href="#43-amsstart" id="markdown-toc-43-amsstart">4.3 AMS.start</a></li>
+  <li><a href="#44-amssetsystemprocess" id="markdown-toc-44-amssetsystemprocess">4.4 AMS.setSystemProcess</a></li>
+  <li><a href="#45-startotherservices" id="markdown-toc-45-startotherservices">4.5 startOtherServices</a></li>
+  <li><a href="#46-activitymanagerservicesystemready" id="markdown-toc-46-activitymanagerservicesystemready">4.6 ActivityManagerService.systemReady</a></li>
+</ul>
+<h6 id="41-前言">4.1 前言</h6>
+<p>前面已经提到过在SystemServer中启动了AMS，并且AMS是android系统中很重要的服务.记录着Activity的<br />
+开启,关闭，以及一些记录，同时我们所能看到的launcher也是通过AMS启动的。<br />
+源码:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="nl">http:</span><span class="c1">//androidxref.com/9.0.0_r3/xref/frameworks/base/services/core/java/com/android/server/am/ActivityManagerService.java&gt;</span>
+</code></pre></div></div>
+
+<h6 id="42-启动">4.2 启动</h6>
+<p>AMS是在SystemServer中创建的，只copy出来了主要代码</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">startBootstrapServices</span><span class="o">()</span> <span class="o">{</span>
+  <span class="c1">// Activity manager runs the show.</span>
+<span class="mi">558</span>        <span class="n">traceBeginAndSlog</span><span class="o">(</span><span class="s">"StartActivityManager"</span><span class="o">);</span>
+           <span class="c1">//实例化对象</span>
+<span class="mi">559</span>        <span class="n">mActivityManagerService</span> <span class="o">=</span> <span class="n">mSystemServiceManager</span><span class="o">.</span><span class="na">startService</span><span class="o">(</span>
+<span class="mi">560</span>                <span class="nc">ActivityManagerService</span><span class="o">.</span><span class="na">Lifecycle</span><span class="o">.</span><span class="na">class</span><span class="o">).</span><span class="na">getService</span><span class="o">();</span>
+           <span class="c1">//把自己添加为binder service，从而别的进程调用</span>
+           <span class="n">mActivityManagerService</span><span class="o">.</span><span class="na">setSystemProcess</span><span class="o">();</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>先看下Lifecycle这个类是干嘛的，继承了SystemService，然后在构造函数中把AMS的对象实例化出来</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Lifecycle</span> <span class="kd">extends</span> <span class="nc">SystemService</span> <span class="o">{</span>
+<span class="mi">2878</span>        <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ActivityManagerService</span> <span class="n">mService</span><span class="o">;</span>
+<span class="mi">2879</span>
+<span class="mi">2880</span>        <span class="kd">public</span> <span class="nf">Lifecycle</span><span class="o">(</span><span class="nc">Context</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2881</span>            <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+<span class="mi">2882</span>            <span class="n">mService</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ActivityManagerService</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+<span class="mi">2883</span>        <span class="o">}</span>
+<span class="mi">2884</span>
+<span class="mi">2885</span>        <span class="nd">@Override</span>
+<span class="mi">2886</span>        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onStart</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">2887</span>            <span class="n">mService</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="mi">2888</span>        <span class="o">}</span>
+<span class="mi">2889</span>
+<span class="mi">2890</span>        <span class="nd">@Override</span>
+<span class="mi">2891</span>        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onBootPhase</span><span class="o">(</span><span class="kt">int</span> <span class="n">phase</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2892</span>            <span class="n">mService</span><span class="o">.</span><span class="na">mBootPhase</span> <span class="o">=</span> <span class="n">phase</span><span class="o">;</span>
+<span class="mi">2893</span>            <span class="k">if</span> <span class="o">(</span><span class="n">phase</span> <span class="o">==</span> <span class="no">PHASE_SYSTEM_SERVICES_READY</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2894</span>                <span class="n">mService</span><span class="o">.</span><span class="na">mBatteryStatsService</span><span class="o">.</span><span class="na">systemServicesReady</span><span class="o">();</span>
+<span class="mi">2895</span>                <span class="n">mService</span><span class="o">.</span><span class="na">mServices</span><span class="o">.</span><span class="na">systemServicesReady</span><span class="o">();</span>
+<span class="mi">2896</span>            <span class="o">}</span>
+<span class="mi">2897</span>        <span class="o">}</span>
+<span class="mi">2898</span>
+<span class="mi">2899</span>        <span class="nd">@Override</span>
+<span class="mi">2900</span>        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCleanupUser</span><span class="o">(</span><span class="kt">int</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2901</span>            <span class="n">mService</span><span class="o">.</span><span class="na">mBatteryStatsService</span><span class="o">.</span><span class="na">onCleanupUser</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+<span class="mi">2902</span>        <span class="o">}</span>
+<span class="mi">2903</span>
+<span class="mi">2904</span>        <span class="kd">public</span> <span class="nc">ActivityManagerService</span> <span class="nf">getService</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">2905</span>            <span class="k">return</span> <span class="n">mService</span><span class="o">;</span>
+<span class="mi">2906</span>        <span class="o">}</span>
+<span class="mi">2907</span>    <span class="o">}</span>
+
+</code></pre></div></div>
+<p>接着看SystemServiceManager的startService方法，在这个方法里面通过反射实例化了lifecycle这个类</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">*/</span>
+<span class="mi">83</span>    <span class="nd">@SuppressWarnings</span><span class="o">(</span><span class="s">"unchecked"</span><span class="o">)</span>
+<span class="mi">84</span>    <span class="kd">public</span> <span class="o">&lt;</span><span class="no">T</span> <span class="kd">extends</span> <span class="nc">SystemService</span><span class="o">&gt;</span> <span class="no">T</span> <span class="nf">startService</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">serviceClass</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">85</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">86</span>            <span class="kd">final</span> <span class="nc">String</span> <span class="n">name</span> <span class="o">=</span> <span class="n">serviceClass</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
+<span class="mi">87</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">i</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Starting "</span> <span class="o">+</span> <span class="n">name</span><span class="o">);</span>
+<span class="mi">88</span>            <span class="nc">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="nc">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_SYSTEM_SERVER</span><span class="o">,</span> <span class="s">"StartService "</span> <span class="o">+</span> <span class="n">name</span><span class="o">);</span>
+<span class="mi">89</span>
+<span class="mi">90</span>            <span class="c1">// Create the service.</span>
+<span class="mi">91</span>            <span class="k">if</span> <span class="o">(!</span><span class="nc">SystemService</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">isAssignableFrom</span><span class="o">(</span><span class="n">serviceClass</span><span class="o">))</span> <span class="o">{</span>
+<span class="mi">92</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to create "</span> <span class="o">+</span> <span class="n">name</span>
+<span class="mi">93</span>                        <span class="o">+</span> <span class="s">": service must extend "</span> <span class="o">+</span> <span class="nc">SystemService</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+<span class="mi">94</span>            <span class="o">}</span>
+<span class="mi">95</span>            <span class="kd">final</span> <span class="no">T</span> <span class="n">service</span><span class="o">;</span>
+<span class="mi">96</span>            <span class="k">try</span> <span class="o">{</span>
+                  <span class="c1">//通过构造函数实例化lifecycle对象</span>
+<span class="mi">97</span>                <span class="nc">Constructor</span><span class="o">&lt;</span><span class="no">T</span><span class="o">&gt;</span> <span class="n">constructor</span> <span class="o">=</span> <span class="n">serviceClass</span><span class="o">.</span><span class="na">getConstructor</span><span class="o">(</span><span class="nc">Context</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="mi">98</span>                <span class="n">service</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">mContext</span><span class="o">);</span>
+<span class="mi">99</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">InstantiationException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">100</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to create service "</span> <span class="o">+</span> <span class="n">name</span>
+<span class="mi">101</span>                        <span class="o">+</span> <span class="s">": service could not be instantiated"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">102</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">IllegalAccessException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">103</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to create service "</span> <span class="o">+</span> <span class="n">name</span>
+<span class="mi">104</span>                        <span class="o">+</span> <span class="s">": service must have a public constructor with a Context argument"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">105</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">NoSuchMethodException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">106</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to create service "</span> <span class="o">+</span> <span class="n">name</span>
+<span class="mi">107</span>                        <span class="o">+</span> <span class="s">": service must have a public constructor with a Context argument"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">108</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">InvocationTargetException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">109</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to create service "</span> <span class="o">+</span> <span class="n">name</span>
+<span class="mi">110</span>                        <span class="o">+</span> <span class="s">": service constructor threw an exception"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">111</span>            <span class="o">}</span>
+<span class="mi">112</span>
+<span class="mi">113</span>            <span class="n">startService</span><span class="o">(</span><span class="n">service</span><span class="o">);</span>
+<span class="mi">114</span>            <span class="k">return</span> <span class="n">service</span><span class="o">;</span>
+<span class="mi">115</span>        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+<span class="mi">116</span>            <span class="nc">Trace</span><span class="o">.</span><span class="na">traceEnd</span><span class="o">(</span><span class="nc">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_SYSTEM_SERVER</span><span class="o">);</span>
+<span class="mi">117</span>        <span class="o">}</span>
+<span class="mi">118</span>    <span class="o">}</span>
+
+<span class="c1">//调用lifecycle的onstart方法，也就是调用AMS的onStart方法</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">startService</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="kd">final</span> <span class="nc">SystemService</span> <span class="n">service</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">121</span>        <span class="c1">// Register it.</span>
+<span class="mi">122</span>        <span class="n">mServices</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">service</span><span class="o">);</span>
+<span class="mi">123</span>        <span class="c1">// Start it.</span>
+<span class="mi">124</span>        <span class="kt">long</span> <span class="n">time</span> <span class="o">=</span> <span class="nc">SystemClock</span><span class="o">.</span><span class="na">elapsedRealtime</span><span class="o">();</span>
+<span class="mi">125</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">126</span>            <span class="n">service</span><span class="o">.</span><span class="na">onStart</span><span class="o">();</span>
+<span class="mi">127</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RuntimeException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">128</span>            <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Failed to start service "</span> <span class="o">+</span> <span class="n">service</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getName</span><span class="o">()</span>
+<span class="mi">129</span>                    <span class="o">+</span> <span class="s">": onStart threw an exception"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">130</span>        <span class="o">}</span>
+<span class="mi">131</span>        <span class="n">warnIfTooLong</span><span class="o">(</span><span class="nc">SystemClock</span><span class="o">.</span><span class="na">elapsedRealtime</span><span class="o">()</span> <span class="o">-</span> <span class="n">time</span><span class="o">,</span> <span class="n">service</span><span class="o">,</span> <span class="s">"onStart"</span><span class="o">);</span>
+<span class="mi">132</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>到这里AMS的对象通过lifecycle实例化了。并且onStart方法开始运行了,我们来看看AMS里面是怎么实例化的</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// handlers to other threads.  So take care to be explicit about the looper.</span>
+<span class="mi">3047</span>    <span class="kd">public</span> <span class="nf">ActivityManagerService</span><span class="o">(</span><span class="nc">Context</span> <span class="n">systemContext</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3048</span>        <span class="nc">LockGuard</span><span class="o">.</span><span class="na">installLock</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="nc">LockGuard</span><span class="o">.</span><span class="na">INDEX_ACTIVITY</span><span class="o">);</span>
+<span class="mi">3049</span>        <span class="n">mInjector</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Injector</span><span class="o">();</span>
+<span class="mi">3050</span>        <span class="n">mContext</span> <span class="o">=</span> <span class="n">systemContext</span><span class="o">;</span>
+<span class="mi">3051</span>
+<span class="mi">3052</span>        <span class="n">mFactoryTest</span> <span class="o">=</span> <span class="nc">FactoryTest</span><span class="o">.</span><span class="na">getMode</span><span class="o">();</span>
+<span class="mi">3053</span>        <span class="n">mSystemThread</span> <span class="o">=</span> <span class="nc">ActivityThread</span><span class="o">.</span><span class="na">currentActivityThread</span><span class="o">();</span>
+<span class="mi">3054</span>        <span class="n">mUiContext</span> <span class="o">=</span> <span class="n">mSystemThread</span><span class="o">.</span><span class="na">getSystemUiContext</span><span class="o">();</span>
+<span class="mi">3055</span>
+<span class="mi">3056</span>        <span class="nc">Slog</span><span class="o">.</span><span class="na">i</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Memory class: "</span> <span class="o">+</span> <span class="nc">ActivityManager</span><span class="o">.</span><span class="na">staticGetMemoryClass</span><span class="o">());</span>
+<span class="mi">3057</span>
+<span class="mi">3058</span>        <span class="n">mPermissionReviewRequired</span> <span class="o">=</span> <span class="n">mContext</span><span class="o">.</span><span class="na">getResources</span><span class="o">().</span><span class="na">getBoolean</span><span class="o">(</span>
+<span class="mi">3059</span>                <span class="n">com</span><span class="o">.</span><span class="na">android</span><span class="o">.</span><span class="na">internal</span><span class="o">.</span><span class="na">R</span><span class="o">.</span><span class="na">bool</span><span class="o">.</span><span class="na">config_permissionReviewRequired</span><span class="o">);</span>
+<span class="mi">3060</span>        <span class="o">/</span><span class="err">创建名为</span><span class="s">"ActivityManager"</span><span class="err">的前台线程，并获取</span><span class="n">mHandler</span>
+<span class="mi">3061</span>        <span class="n">mHandlerThread</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ServiceThread</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span>
+<span class="mi">3062</span>                <span class="no">THREAD_PRIORITY_FOREGROUND</span><span class="o">,</span> <span class="kc">false</span> <span class="cm">/*allowIo*/</span><span class="o">);</span>
+<span class="mi">3063</span>        <span class="n">mHandlerThread</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="mi">3064</span>        <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">MainHandler</span><span class="o">(</span><span class="n">mHandlerThread</span><span class="o">.</span><span class="na">getLooper</span><span class="o">());</span>
+<span class="mi">3065</span>        <span class="n">mUiHandler</span> <span class="o">=</span> <span class="n">mInjector</span><span class="o">.</span><span class="na">getUiHandler</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3066</span>
+<span class="mi">3067</span>        <span class="n">mProcStartHandlerThread</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ServiceThread</span><span class="o">(</span><span class="no">TAG</span> <span class="o">+</span> <span class="s">":procStart"</span><span class="o">,</span>
+<span class="mi">3068</span>                <span class="no">THREAD_PRIORITY_FOREGROUND</span><span class="o">,</span> <span class="kc">false</span> <span class="cm">/* allowIo */</span><span class="o">);</span>
+<span class="mi">3069</span>        <span class="n">mProcStartHandlerThread</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="mi">3070</span>        <span class="n">mProcStartHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Handler</span><span class="o">(</span><span class="n">mProcStartHandlerThread</span><span class="o">.</span><span class="na">getLooper</span><span class="o">());</span>
+<span class="mi">3071</span>
+<span class="mi">3072</span>        <span class="n">mConstants</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ActivityManagerConstants</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3073</span>
+<span class="mi">3074</span>        <span class="cm">/* static; one-time init here */</span>
+<span class="mi">3075</span>        <span class="k">if</span> <span class="o">(</span><span class="n">sKillHandler</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3076</span>            <span class="n">sKillThread</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ServiceThread</span><span class="o">(</span><span class="no">TAG</span> <span class="o">+</span> <span class="s">":kill"</span><span class="o">,</span>
+<span class="mi">3077</span>                    <span class="no">THREAD_PRIORITY_BACKGROUND</span><span class="o">,</span> <span class="kc">true</span> <span class="cm">/* allowIo */</span><span class="o">);</span>
+<span class="mi">3078</span>            <span class="n">sKillThread</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="mi">3079</span>            <span class="n">sKillHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">KillHandler</span><span class="o">(</span><span class="n">sKillThread</span><span class="o">.</span><span class="na">getLooper</span><span class="o">());</span>
+<span class="mi">3080</span>        <span class="o">}</span>
+<span class="mi">3081</span>        
+            <span class="c1">//前台广播接收器，超时时间为10S</span>
+<span class="mi">3082</span>        <span class="n">mFgBroadcastQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BroadcastQueue</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">,</span>
+<span class="mi">3083</span>                <span class="s">"foreground"</span><span class="o">,</span> <span class="no">BROADCAST_FG_TIMEOUT</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+            <span class="c1">//后台广播接收器，超时时间为60S</span>
+<span class="mi">3084</span>        <span class="n">mBgBroadcastQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BroadcastQueue</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">,</span>
+<span class="mi">3085</span>                <span class="s">"background"</span><span class="o">,</span> <span class="no">BROADCAST_BG_TIMEOUT</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+<span class="mi">3086</span>        <span class="n">mBroadcastQueues</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">mFgBroadcastQueue</span><span class="o">;</span>
+<span class="mi">3087</span>        <span class="n">mBroadcastQueues</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="o">=</span> <span class="n">mBgBroadcastQueue</span><span class="o">;</span>
+<span class="mi">3088</span>
+<span class="mi">3089</span>        <span class="n">mServices</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ActiveServices</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3090</span>        <span class="n">mProviderMap</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ProviderMap</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3091</span>        <span class="n">mAppErrors</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">AppErrors</span><span class="o">(</span><span class="n">mUiContext</span><span class="o">,</span> <span class="k">this</span><span class="o">);</span>
+<span class="mi">3092</span>        
+            <span class="c1">//创建目录/data/system</span>
+<span class="mi">3093</span>        <span class="nc">File</span> <span class="n">dataDir</span> <span class="o">=</span> <span class="nc">Environment</span><span class="o">.</span><span class="na">getDataDirectory</span><span class="o">();</span>
+<span class="mi">3094</span>        <span class="nc">File</span> <span class="n">systemDir</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="n">dataDir</span><span class="o">,</span> <span class="s">"system"</span><span class="o">);</span>
+<span class="mi">3095</span>        <span class="n">systemDir</span><span class="o">.</span><span class="na">mkdirs</span><span class="o">();</span>
+<span class="mi">3096</span>
+<span class="mi">3097</span>        <span class="n">mAppWarnings</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">AppWarnings</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">mUiContext</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">,</span> <span class="n">mUiHandler</span><span class="o">,</span> <span class="n">systemDir</span><span class="o">);</span>
+<span class="mi">3098</span>        <span class="c1">//创建服务BatteryStatsService</span>
+<span class="mi">3099</span>        <span class="c1">// TODO: Move creation of battery stats service outside of activity manager service.</span>
+<span class="mi">3100</span>        <span class="n">mBatteryStatsService</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BatteryStatsService</span><span class="o">(</span><span class="n">systemContext</span><span class="o">,</span> <span class="n">systemDir</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3101</span>        <span class="n">mBatteryStatsService</span><span class="o">.</span><span class="na">getActiveStatistics</span><span class="o">().</span><span class="na">readLocked</span><span class="o">();</span>
+<span class="mi">3102</span>        <span class="n">mBatteryStatsService</span><span class="o">.</span><span class="na">scheduleWriteToDisk</span><span class="o">();</span>
+<span class="mi">3103</span>        <span class="n">mOnBattery</span> <span class="o">=</span> <span class="no">DEBUG_POWER</span> <span class="o">?</span> <span class="kc">true</span>
+<span class="mi">3104</span>                <span class="o">:</span> <span class="n">mBatteryStatsService</span><span class="o">.</span><span class="na">getActiveStatistics</span><span class="o">().</span><span class="na">getIsOnBattery</span><span class="o">();</span>
+<span class="mi">3105</span>        <span class="n">mBatteryStatsService</span><span class="o">.</span><span class="na">getActiveStatistics</span><span class="o">().</span><span class="na">setCallback</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3106</span>
+            <span class="c1">//创建进程统计服务，信息保存在目录/data/system/procstats，</span>
+<span class="mi">3107</span>        <span class="n">mProcessStats</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ProcessStatsService</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="n">systemDir</span><span class="o">,</span> <span class="s">"procstats"</span><span class="o">));</span>
+<span class="mi">3108</span>
+<span class="mi">3109</span>        <span class="n">mAppOpsService</span> <span class="o">=</span> <span class="n">mInjector</span><span class="o">.</span><span class="na">getAppOpsService</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="n">systemDir</span><span class="o">,</span> <span class="s">"appops.xml"</span><span class="o">),</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3110</span>
+<span class="mi">3111</span>        <span class="n">mGrantFile</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">AtomicFile</span><span class="o">(</span><span class="k">new</span> <span class="nc">File</span><span class="o">(</span><span class="n">systemDir</span><span class="o">,</span> <span class="s">"urigrants.xml"</span><span class="o">),</span> <span class="s">"uri-grants"</span><span class="o">);</span>
+<span class="mi">3112</span>
+<span class="mi">3113</span>        <span class="n">mUserController</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">UserController</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3114</span>
+<span class="mi">3115</span>        <span class="n">mVrController</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">VrController</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3116</span>
+<span class="mi">3117</span>        <span class="no">GL_ES_VERSION</span> <span class="o">=</span> <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">getInt</span><span class="o">(</span><span class="s">"ro.opengles.version"</span><span class="o">,</span>
+<span class="mi">3118</span>            <span class="nc">ConfigurationInfo</span><span class="o">.</span><span class="na">GL_ES_VERSION_UNDEFINED</span><span class="o">);</span>
+<span class="mi">3119</span>
+<span class="mi">3120</span>        <span class="k">if</span> <span class="o">(</span><span class="nc">SystemProperties</span><span class="o">.</span><span class="na">getInt</span><span class="o">(</span><span class="s">"sys.use_fifo_ui"</span><span class="o">,</span> <span class="mi">0</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3121</span>            <span class="n">mUseFifoUiScheduling</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+<span class="mi">3122</span>        <span class="o">}</span>
+<span class="mi">3123</span>
+<span class="mi">3124</span>        <span class="n">mTrackingAssociations</span> <span class="o">=</span> <span class="s">"1"</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="nc">SystemProperties</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">"debug.track-associations"</span><span class="o">));</span>
+<span class="mi">3125</span>        <span class="n">mTempConfig</span><span class="o">.</span><span class="na">setToDefaults</span><span class="o">();</span>
+<span class="mi">3126</span>        <span class="n">mTempConfig</span><span class="o">.</span><span class="na">setLocales</span><span class="o">(</span><span class="nc">LocaleList</span><span class="o">.</span><span class="na">getDefault</span><span class="o">());</span>
+<span class="mi">3127</span>        <span class="n">mConfigurationSeq</span> <span class="o">=</span> <span class="n">mTempConfig</span><span class="o">.</span><span class="na">seq</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span>
+<span class="mi">3128</span>        <span class="n">mStackSupervisor</span> <span class="o">=</span> <span class="n">createStackSupervisor</span><span class="o">();</span>
+<span class="mi">3129</span>        <span class="n">mStackSupervisor</span><span class="o">.</span><span class="na">onConfigurationChanged</span><span class="o">(</span><span class="n">mTempConfig</span><span class="o">);</span>
+<span class="mi">3130</span>        <span class="n">mKeyguardController</span> <span class="o">=</span> <span class="n">mStackSupervisor</span><span class="o">.</span><span class="na">getKeyguardController</span><span class="o">();</span>
+<span class="mi">3131</span>        <span class="n">mCompatModePackages</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">CompatModePackages</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">systemDir</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3132</span>        <span class="n">mIntentFirewall</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">IntentFirewall</span><span class="o">(</span><span class="k">new</span> <span class="nc">IntentFirewallInterface</span><span class="o">(),</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3133</span>        <span class="n">mTaskChangeNotificationController</span> <span class="o">=</span>
+<span class="mi">3134</span>                <span class="k">new</span> <span class="nc">TaskChangeNotificationController</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">mStackSupervisor</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3135</span>        <span class="n">mActivityStartController</span> <span class="o">=</span> <span class="err"> </span><span class="k">new</span> <span class="nc">ActivityStartController</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3136</span>        <span class="n">mRecentTasks</span> <span class="o">=</span> <span class="n">createRecentTasks</span><span class="o">();</span>
+<span class="mi">3137</span>        <span class="n">mStackSupervisor</span><span class="o">.</span><span class="na">setRecentTasks</span><span class="o">(</span><span class="n">mRecentTasks</span><span class="o">);</span>
+<span class="mi">3138</span>        <span class="n">mLockTaskController</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">LockTaskController</span><span class="o">(</span><span class="n">mContext</span><span class="o">,</span> <span class="n">mStackSupervisor</span><span class="o">,</span> <span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3139</span>        <span class="n">mLifecycleManager</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ClientLifecycleManager</span><span class="o">();</span>
+<span class="mi">3140</span>
+            <span class="c1">//创建名为"CpuTracker"的线程</span>
+<span class="mi">3141</span>        <span class="n">mProcessCpuThread</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Thread</span><span class="o">(</span><span class="s">"CpuTracker"</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3142</span>            <span class="nd">@Override</span>
+<span class="mi">3143</span>            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">3144</span>                <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mProcessCpuTracker</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3145</span>                    <span class="n">mProcessCpuInitLatch</span><span class="o">.</span><span class="na">countDown</span><span class="o">();</span>
+<span class="mi">3146</span>                    <span class="n">mProcessCpuTracker</span><span class="o">.</span><span class="na">init</span><span class="o">();</span>
+<span class="mi">3147</span>                <span class="o">}</span>
+<span class="mi">3148</span>                <span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3149</span>                    <span class="k">try</span> <span class="o">{</span>
+<span class="mi">3150</span>                        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">3151</span>                            <span class="kd">synchronized</span><span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3152</span>                                <span class="kd">final</span> <span class="kt">long</span> <span class="n">now</span> <span class="o">=</span> <span class="nc">SystemClock</span><span class="o">.</span><span class="na">uptimeMillis</span><span class="o">();</span>
+<span class="mi">3153</span>                                <span class="kt">long</span> <span class="n">nextCpuDelay</span> <span class="o">=</span> <span class="o">(</span><span class="n">mLastCpuTime</span><span class="o">.</span><span class="na">get</span><span class="o">()+</span><span class="no">MONITOR_CPU_MAX_TIME</span><span class="o">)-</span><span class="n">now</span><span class="o">;</span>
+<span class="mi">3154</span>                                <span class="n">lon</span><span class="err"> </span><span class="n">g</span> <span class="n">nextWriteDelay</span> <span class="o">=</span> <span class="o">(</span><span class="n">mLastWriteTime</span><span class="o">+</span><span class="no">BATTERY_STATS_TIME</span><span class="o">)-</span><span class="n">now</span><span class="o">;</span>
+<span class="mi">3155</span>                                <span class="c1">//Slog.i(TAG, "Cpu delay=" + nextCpuDelay</span>
+<span class="mi">3156</span>                                <span class="c1">//        + ", write delay=" + nextWriteDelay);</span>
+<span class="mi">3157</span>                                <span class="k">if</span> <span class="o">(</span><span class="n">nextWriteDelay</span> <span class="o">&lt;</span> <span class="n">nextCpuDelay</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3158</span>                                    <span class="n">nextCpuDelay</span> <span class="o">=</span> <span class="n">nextWriteDelay</span><span class="o">;</span>
+<span class="mi">3159</span>                                <span class="o">}</span>
+<span class="mi">3160</span>                                <span class="k">if</span> <span class="o">(</span><span class="n">nextCpuDelay</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3161</span>                                    <span class="n">mProcessCpuMutexFree</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">3162</span>                                    <span class="k">this</span><span class="o">.</span><span class="na">wait</span><span class="o">(</span><span class="n">nextCpuDelay</span><span class="o">);</span>
+<span class="mi">3163</span>                                <span class="o">}</span>
+<span class="mi">3164</span>                            <span class="o">}</span>
+<span class="mi">3165</span>                        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3166</span>                        <span class="o">}</span>
+                            <span class="c1">//更新CPU的状态</span>
+<span class="mi">3167</span>                        <span class="n">updateCpuStatsNow</span><span class="o">();</span>
+<span class="mi">3168</span>                    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3169</span>                        <span class="nc">Slog</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Unexpected exception collecting process stats"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+<span class="mi">3170</span>                    <span class="o">}</span>
+<span class="mi">3171</span>                <span class="o">}</span>
+<span class="mi">3172</span>            <span class="o">}</span>
+<span class="mi">3173</span>        <span class="o">};</span>
+<span class="mi">3174</span>
+<span class="mi">3175</span>        <span class="n">mHiddenApiBlacklist</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">HiddenApiSettings</span><span class="o">(</span><span class="n">mHandler</span><span class="o">,</span> <span class="n">mContext</span><span class="o">);</span>
+<span class="mi">3176</span>
+<span class="mi">3177</span>        <span class="nc">Watchdog</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">addMonitor</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">3178</span>        <span class="nc">Watchdog</span><span class="o">.</span><span class="na">getInstance</span><span class="o">().</span><span class="na">addThread</span><span class="o">(</span><span class="n">mHandler</span><span class="o">);</span>
+<span class="mi">3179</span>
+<span class="mi">3180</span>        <span class="c1">// bind background thread to little cores</span>
+<span class="mi">3181</span>        <span class="c1">// this is expected to fail inside of framework tests because apps can't touch cpusets directly</span>
+<span class="mi">3182</span>        <span class="c1">// make sure we've already adjusted system_server's internal view of itself first</span>
+<span class="mi">3183</span>        <span class="n">updateOomAdjLocked</span><span class="o">();</span>
+<span class="mi">3184</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">3185</span>            <span class="nc">Process</span><span class="o">.</span><span class="na">setThreadGroupAndCpuset</span><span class="o">(</span><span class="nc">BackgroundThread</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">getThreadId</span><span class="o">(),</span>
+<span class="mi">3186</span>                    <span class="nc">Process</span><span class="o">.</span><span class="na">THREAD_GROUP_BG_NONINTERACTIVE</span><span class="o">);</span>
+<span class="mi">3187</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3188</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Setting background thread cpuset failed"</span><span class="o">);</span>
+<span class="mi">3189</span>        <span class="o">}</span>
+<span class="mi">3190</span>
+<span class="mi">3191</span>    <span class="o">}</span>
+</code></pre></div></div>
+<h6 id="43-amsstart">4.3 AMS.start</h6>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">start</span><span class="o">()</span> <span class="o">{</span>
+            <span class="c1">//移除所有的进程组</span>
+<span class="mi">3216</span>        <span class="n">removeAllProcessGroups</span><span class="o">();</span>
+            <span class="c1">//CpuTracker线程开启</span>
+<span class="mi">3217</span>        <span class="n">mProcessCpuThread</span><span class="o">.</span><span class="na">start</span><span class="o">();</span>
+<span class="mi">3218</span>        <span class="c1">//启动电池统计服务</span>
+<span class="mi">3219</span>        <span class="n">mBatteryStatsService</span><span class="o">.</span><span class="na">publish</span><span class="o">();</span>
+<span class="mi">3220</span>        <span class="n">mAppOpsService</span><span class="o">.</span><span class="na">publish</span><span class="o">(</span><span class="n">mContext</span><span class="o">);</span>
+<span class="mi">3221</span>        <span class="nc">Slog</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">"AppOps"</span><span class="o">,</span> <span class="s">"AppOpsService published"</span><span class="o">);</span>
+            <span class="c1">//添加到本地的service，这个地方只能在同一个进程里面可以调用，这个地方很重要，因为下面还有一个binder service</span>
+<span class="mi">3222</span>        <span class="nc">LocalServices</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="nc">ActivityManagerInternal</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="k">new</span> <span class="nc">LocalService</span><span class="o">());</span>
+<span class="mi">3223</span>        <span class="c1">// Wait for the synchronized block started in mProcessCpuThread,</span>
+<span class="mi">3224</span>        <span class="c1">// so that any other acccess to mProcessCpuTracker from main thread</span>
+<span class="mi">3225</span>        <span class="c1">// will be blocked during mProcessCpuTracker initialization.</span>
+<span class="mi">3226</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">3227</span>            <span class="n">mProcessCpuInitLatch</span><span class="o">.</span><span class="na">await</span><span class="o">();</span>
+<span class="mi">3228</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">InterruptedException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">3229</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">wtf</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Interrupted wait during start"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+<span class="mi">3230</span>            <span class="nc">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">().</span><span class="na">interrupt</span><span class="o">();</span>
+<span class="mi">3231</span>            <span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalStateException</span><span class="o">(</span><span class="s">"Interrupted wait during start"</span><span class="o">);</span>
+<span class="mi">3232</span>        <span class="o">}</span>
+<span class="mi">3233</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<h6 id="44-amssetsystemprocess">4.4 AMS.setSystemProcess</h6>
+<p>在systemserver类的startBootstrapServices方法会调用setSystemProcess方法,这里有一个地方很重要<br />
+我也是找了半天才看出来, 添加binder service,为跨进程通信使用，我当时纳闷了好久，因为在ActivityManager中<br />
+会用到这个binder service，我找了很长时间才找到</p>
+
+<p><strong>ServiceManager.addService(Context.ACTIVITY_SERVICE, this, /* allowIsolated= */ true,
+  DUMP_FLAG_PRIORITY_CRITICAL | DUMP_FLAG_PRIORITY_NORMAL |</strong></p>
+
+<p>这个方法里面主要就是注册各种服务</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">setSystemProcess</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">2721</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">2722</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="nc">Context</span><span class="o">.</span><span class="na">ACTIVITY_SERVICE</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="cm">/* allowIsolated= */</span> <span class="kc">true</span><span class="o">,</span>
+<span class="mi">2723</span>                    <span class="no">DUMP_FLAG_PRIORITY_CRITICAL</span> <span class="o">|</span> <span class="no">DUMP_FLAG_PRIORITY_NORMAL</span> <span class="o">|</span> <span class="no">DUMP_FLAG_PROTO</span><span class="o">);</span>
+<span class="mi">2724</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="nc">ProcessStats</span><span class="o">.</span><span class="na">SERVICE_NAME</span><span class="o">,</span> <span class="n">mProcessStats</span><span class="o">);</span>
+<span class="mi">2725</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"meminfo"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">MemBinder</span><span class="o">(</span><span class="k">this</span><span class="o">),</span> <span class="cm">/* allowIsolated= */</span> <span class="kc">false</span><span class="o">,</span>
+<span class="mi">2726</span>                    <span class="no">DUMP_FLAG_PRIORITY_HIGH</span><span class="o">);</span>
+<span class="mi">2727</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"gfxinfo"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">GraphicsBinder</span><span class="o">(</span><span class="k">this</span><span class="o">));</span>
+<span class="mi">2728</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"dbinfo"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">DbBinder</span><span class="o">(</span><span class="k">this</span><span class="o">));</span>
+<span class="mi">2729</span>            <span class="k">if</span> <span class="o">(</span><span class="no">MONITOR_CPU_USAGE</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2730</span>                <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"cpuinfo"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">CpuBinder</span><span class="o">(</span><span class="k">this</span><span class="o">),</span>
+<span class="mi">2731</span>                        <span class="cm">/* allowIsolated= */</span> <span class="kc">false</span><span class="o">,</span> <span class="no">DUMP_FLAG_PRIORITY_CRITICAL</span><span class="o">);</span>
+<span class="mi">2732</span>            <span class="o">}</span>
+<span class="mi">2733</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"permission"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">PermissionController</span><span class="o">(</span><span class="k">this</span><span class="o">));</span>
+<span class="mi">2734</span>            <span class="nc">ServiceManager</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="s">"processinfo"</span><span class="o">,</span> <span class="k">new</span> <span class="nc">ProcessInfoService</span><span class="o">(</span><span class="k">this</span><span class="o">));</span>
+<span class="mi">2735</span>
+<span class="mi">2736</span>            <span class="nc">ApplicationInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">mContext</span><span class="o">.</span><span class="na">getPackageManager</span><span class="o">().</span><span class="na">getApplicationInfo</span><span class="o">(</span>
+<span class="mi">2737</span>                    <span class="s">"android"</span><span class="o">,</span> <span class="no">STOCK_PM_FLAGS</span> <span class="o">|</span> <span class="no">MATCH_SYSTEM_ONLY</span><span class="o">);</span>
+<span class="mi">2738</span>            <span class="n">mSystemThread</span><span class="o">.</span><span class="na">installSystemApplicationInfo</span><span class="o">(</span><span class="n">info</span><span class="o">,</span> <span class="n">getClass</span><span class="o">().</span><span class="na">getClassLoader</span><span class="o">());</span>
+<span class="mi">2739</span>
+<span class="mi">2740</span>            <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2741</span>                <span class="nc">ProcessRecord</span> <span class="n">app</span> <span class="o">=</span> <span class="n">newProcessRecordLocked</span><span class="o">(</span><span class="n">info</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">processName</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+<span class="mi">2742</span>                <span class="n">app</span><span class="o">.</span><span class="na">persistent</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+<span class="mi">2743</span>                <span class="n">app</span><span class="o">.</span><span class="na">pid</span> <span class="o">=</span> <span class="no">MY_PID</span><span class="o">;</span>
+<span class="mi">2744</span>                <span class="n">app</span><span class="o">.</span><span class="na">maxAdj</span> <span class="o">=</span> <span class="nc">ProcessList</span><span class="o">.</span><span class="na">SYSTEM_ADJ</span><span class="o">;</span>
+<span class="mi">2745</span>                <span class="n">app</span><span class="o">.</span><span class="na">makeActive</span><span class="o">(</span><span class="n">mSystemThread</span><span class="o">.</span><span class="na">getApplicationThread</span><span class="o">(),</span> <span class="n">mProcessStats</span><span class="o">);</span>
+<span class="mi">2746</span>                <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mPidsSelfLocked</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2747</span>                    <span class="n">mPidsSelfLocked</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">app</span><span class="o">.</span><span class="na">pid</span><span class="o">,</span> <span class="n">app</span><span class="o">);</span>
+<span class="mi">2748</span>                <span class="o">}</span>
+<span class="mi">2749</span>                <span class="n">updateLruProcessLocked</span><span class="o">(</span><span class="n">app</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+<span class="mi">2750</span>                <span class="n">updateOomAdjLocked</span><span class="o">();</span>
+<span class="mi">2751</span>            <span class="o">}</span>
+<span class="mi">2752</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">PackageManager</span><span class="o">.</span><span class="na">NameNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2753</span>            <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span>
+<span class="mi">2754</span>                    <span class="s">"Unable to find android system package"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+<span class="mi">2755</span>        <span class="o">}</span>
+<span class="mi">2756</span>
+<span class="mi">2757</span>        <span class="c1">// Start watching app ops after we and the package manager are up and running.</span>
+<span class="mi">2758</span>        <span class="n">mAppOpsService</span><span class="o">.</span><span class="na">startWatchingMode</span><span class="o">(</span><span class="nc">AppOpsManager</span><span class="o">.</span><span class="na">OP_RUN_IN_BACKGROUND</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span>
+<span class="mi">2759</span>                <span class="k">new</span> <span class="nc">IAppOpsCallback</span><span class="o">.</span><span class="na">Stub</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">2760</span>                    <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">opChanged</span><span class="o">(</span><span class="kt">int</span> <span class="n">op</span><span class="o">,</span> <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="nc">String</span> <span class="n">packageName</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2761</span>                        <span class="k">if</span> <span class="o">(</span><span class="n">op</span> <span class="o">==</span> <span class="nc">AppOpsManager</span><span class="o">.</span><span class="na">OP_RUN_IN_BACKGROUND</span> <span class="o">&amp;&amp;</span> <span class="n">packageName</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2762</span>                            <span class="k">if</span> <span class="o">(</span><span class="n">mAppOpsService</span><span class="o">.</span><span class="na">checkOperation</span><span class="o">(</span><span class="n">op</span><span class="o">,</span> <span class="n">uid</span><span class="o">,</span> <span class="n">packageName</span><span class="o">)</span>
+<span class="mi">2763</span>                                    <span class="o">!=</span> <span class="nc">AppOpsManager</span><span class="o">.</span><span class="na">MODE_ALLOWED</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">2764</span>                                <span class="n">runInBackgroundDisabled</span><span class="o">(</span><span class="n">uid</span><span class="o">);</span>
+<span class="mi">2765</span>                            <span class="o">}</span>
+<span class="mi">2766</span>                        <span class="o">}</span>
+<span class="mi">2767</span>                    <span class="o">}</span>
+<span class="mi">2768</span>                <span class="o">});</span>
+<span class="mi">2769</span>    <span class="o">}</span>
+</code></pre></div></div>
+<h6 id="45-startotherservices">4.5 startOtherServices</h6>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//在systemserer里面调用AMS的systemready方法</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">startOtherServices</span><span class="o">()</span> <span class="o">{</span>
+  <span class="n">mActivityManagerService</span><span class="o">.</span><span class="na">systemReady</span><span class="o">(</span><span class="k">new</span> <span class="n">goingCallback</span><span class="o">())</span> <span class="o">{</span>
+    <span class="n">startSystemUi</span><span class="o">();</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h6 id="46-activitymanagerservicesystemready">4.6 ActivityManagerService.systemReady</h6>
+<p>这里大概的流程</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">systemReady</span><span class="o">(</span><span class="kd">final</span> <span class="nc">Runnable</span> <span class="n">goingCallback</span><span class="o">)</span> <span class="o">{</span>
+
+        <span class="o">...</span><span class="c1">//更新操作</span>
+        <span class="n">mSystemReady</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span> <span class="c1">//系统处于ready状态</span>
+        <span class="n">removeProcessLocked</span><span class="o">(</span><span class="n">proc</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="s">"system update done"</span><span class="o">);</span><span class="c1">//杀掉所有非persistent进程</span>
+        <span class="n">mProcessesReady</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>  <span class="c1">//进程处于ready状态</span>
+
+        <span class="n">goingCallback</span><span class="o">.</span><span class="na">run</span><span class="o">();</span> <span class="c1">//这里有可能启动进程。这里会启动systemui</span>
+
+        <span class="n">addAppLocked</span><span class="o">(</span><span class="n">info</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span> <span class="c1">//启动所有的persistent进程</span>
+        <span class="n">mBooting</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>  <span class="c1">//正在启动中</span>
+        <span class="n">startHomeActivityLocked</span><span class="o">(</span><span class="n">mCurrentUserId</span><span class="o">,</span> <span class="s">"systemReady"</span><span class="o">);</span> <span class="c1">//启动launcher</span>
+        <span class="n">mStackSupervisor</span><span class="o">.</span><span class="na">resumeTopActivitiesLocked</span><span class="o">();</span> <span class="c1">//恢复栈顶的Activity</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p><img src="https://github.com/skypx/BlogResource/raw/master/other/AMS.jpg" alt="avatar" />
+大致的流程:<br />
+忽略我的没有注册的staruml软件 ==!
+<img src="https://github.com/skypx/BlogResource/raw/master/androidsystem/AMS_START.jpg" alt="avatar" /></p>
+:ET

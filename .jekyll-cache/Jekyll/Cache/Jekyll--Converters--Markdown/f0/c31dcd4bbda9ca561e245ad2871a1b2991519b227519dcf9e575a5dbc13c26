@@ -1,0 +1,35 @@
+I"i<ul id="markdown-toc">
+  <li><a href="#这个网站也有一些命令" id="markdown-toc-这个网站也有一些命令">这个网站也有一些命令</a></li>
+</ul>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">1</span><span class="o">.</span> <span class="err">标题加粗</span> <span class="o">:</span> <span class="err">#</span>
+<span class="mi">2</span><span class="o">.</span> <span class="err">引用图片资源</span><span class="o">:</span> <span class="o">![</span><span class="n">avatar</span><span class="o">](</span><span class="n">url</span><span class="o">)</span>
+<span class="mi">3</span><span class="o">.</span> <span class="err">列表</span><span class="o">:</span>
+   <span class="err">第一种方式</span><span class="o">:</span> <span class="o">*</span>
+   <span class="err">第二种方式</span><span class="o">:</span> <span class="mi">1</span><span class="o">.</span> <span class="mi">2</span><span class="o">.</span> <span class="err">这种方式</span>
+<span class="mi">4</span><span class="o">.</span> <span class="err">表格</span><span class="o">:</span> <span class="err">上面</span><span class="o">---,</span> <span class="err">下面是</span><span class="o">---,</span> <span class="err">像下面这样</span>
+
+  <span class="o">---</span>
+  <span class="nl">layout:</span> <span class="n">post</span>
+  <span class="nl">title:</span> <span class="n">Markdown</span><span class="err">语法</span>
+  <span class="nl">category:</span> <span class="err">工具</span>
+  <span class="nl">tags:</span> <span class="nc">Camera</span> <span class="no">API</span> <span class="err">区别</span>
+  <span class="o">---</span>
+
+<span class="mi">5</span><span class="o">.</span><span class="err">超链接有两种方式</span>
+  <span class="err">第一种</span><span class="o">:</span> <span class="o">[</span><span class="err">菜鸟教程</span><span class="o">](</span><span class="nl">https:</span><span class="c1">//www.runoob.com)</span>
+  <span class="err">第二种</span><span class="o">:</span> <span class="o">&lt;</span><span class="nl">https:</span><span class="c1">//www.runoob.com&gt;</span>
+
+<span class="mi">6</span><span class="o">.</span><span class="err">如果换行的话在行末加两个空格</span>
+
+<span class="mi">7</span><span class="o">.&gt;</span> <span class="err">这是引用</span>
+
+<span class="mi">8</span><span class="o">.</span><span class="err">字体加粗用</span> <span class="o">**</span><span class="err">字体</span><span class="o">**</span>
+</code></pre></div></div>
+
+<h1 id="这个网站也有一些命令">这个网站也有一些命令</h1>
+<p><a href="https://www.runoob.com/markdown/md-tutorial.html">菜鸟教程</a>
+<a href="https://www.runoob.com/markdown/md-tutorial.html">https://www.runoob.com/markdown/md-tutorial.html</a></p>
+
+<p>持续更新…</p>
+:ET

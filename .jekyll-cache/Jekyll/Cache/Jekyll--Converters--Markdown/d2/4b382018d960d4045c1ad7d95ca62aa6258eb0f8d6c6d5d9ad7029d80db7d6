@@ -1,0 +1,17 @@
+I"8<ul id="markdown-toc">
+  <li><a href="#原因" id="markdown-toc-原因">原因</a></li>
+  <li><a href="#美梦泡汤" id="markdown-toc-美梦泡汤">美梦泡汤</a></li>
+</ul>
+
+<h3 id="原因">原因</h3>
+<blockquote>
+  <p>最近在做HIDL相关的工作，HIDL暂且不谈， 现在我编译完HIDL的接口之后会给上层App<br />
+提供一个jar包，以供App来调用HIDL接口. 当时我的想法很简单，我编译完之后用studio来<br />
+引入jar包。然后我就可以美滋滋的调用了.</p>
+</blockquote>
+
+<h3 id="美梦泡汤">美梦泡汤</h3>
+<p>熟悉的在out/target/…目录下找到生成的jar包.add library. 在类里面直接引用jar包 <br />
+里面的方法. 走起. run。。。。<br />
+<img src="https://github.com/skypx/BlogResource/raw/master/other/hiden.png" alt="avatar" /></p>
+:ET

@@ -1,0 +1,17 @@
+I"`<ul id="markdown-toc">
+  <li><a href="#一个很全的网站有" id="markdown-toc-一个很全的网站有">一个很全的网站，有</a></li>
+  <li><a href="#为什么要屏幕适配" id="markdown-toc-为什么要屏幕适配">为什么要屏幕适配</a></li>
+  <li><a href="#屏幕适配方案" id="markdown-toc-屏幕适配方案">屏幕适配方案</a></li>
+</ul>
+
+<h5 id="一个很全的网站有">一个很全的网站，有</h5>
+<p><a href="http://screensiz.es/phone">屏幕尺寸大全</a></p>
+
+<h5 id="为什么要屏幕适配">为什么要屏幕适配</h5>
+
+<h5 id="屏幕适配方案">屏幕适配方案</h5>
+<ol>
+  <li>尽量用 <strong>wrap_content</strong>, <strong>match_parent</strong>, <strong>weight</strong> 等关键字，这样保证不管跑在那<br />
+尺寸的屏幕上面都可以铺满全屏，或者是按照比例划分.</li>
+</ol>
+:ET

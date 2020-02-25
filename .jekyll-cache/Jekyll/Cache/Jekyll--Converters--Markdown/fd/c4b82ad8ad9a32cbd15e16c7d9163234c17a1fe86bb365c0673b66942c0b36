@@ -1,0 +1,41 @@
+I"z<ul id="markdown-toc">
+  <li><a href="#1可通过-httpsgeditensoftoniccommac-安装" id="markdown-toc-1可通过-httpsgeditensoftoniccommac-安装">1.可通过 https://gedit.en.softonic.com/mac 安装</a></li>
+  <li><a href="#2通过下面的连接安装" id="markdown-toc-2通过下面的连接安装">2.通过下面的连接安装</a></li>
+</ul>
+
+<blockquote>
+  <p>Mac 下安装 Gedit</p>
+</blockquote>
+
+<h2 id="1可通过-httpsgeditensoftoniccommac-安装">1.可通过 <a href="https://gedit.en.softonic.com/mac">https://gedit.en.softonic.com/mac</a> 安装</h2>
+
+<ol>
+  <li>open -e .bash_profile</li>
+  <li>alias gedit=”sudo open -a gedit”</li>
+  <li>source .bash_profile</li>
+  <li>
+    <p>如果出现打不开“gedit”，因为它来自身份不明的开发者。的问题：参考</p>
+
+    <p><a href="https://jingyan.baidu.com/article/f71d60377960651ab741d140.html">https://jingyan.baidu.com/article/f71d60377960651ab741d140.html</a></p>
+  </li>
+</ol>
+
+<p>关于open 命令</p>
+
+<ul>
+  <li>open，使用关联的程序打开文件，例：open a.txt会用文本编辑打开a.txt，open b.jpg会使用预览打开b.jpg</li>
+  <li>open -e，强制使用文本编辑程序打开文件</li>
+  <li>open -a，自行选择程序打开文件，例：open -a Preview b.jpg会使用预览打开b.jpg，另外使用此命令输入已安装的程序名可直接打开，而open则需要知道程序存放的路径才行，例：open -a Preview等同于open /Applications/Preview.app</li>
+</ul>
+
+<p>但是我用这种方式安装之后打开的一次之后，在次打开的话一定要完全退出上次的软件， 所以很不舒服，下面介绍第二种方式安装</p>
+
+<h2 id="2通过下面的连接安装">2.通过下面的连接安装</h2>
+
+<p><a href="http://macappstore.org/gedit/">http://macappstore.org/gedit/</a></p>
+
+<p>我并没有用<strong>brew cask install gedit</strong>这个命令安装
+用<strong>brew install gedit</strong>这个命令，会安装很多依赖，大约5分钟左右</p>
+
+<p>然后就可以gedit文件了，这个界面比通过<a href="https://gedit.en.softonic.com/mac">softonic</a>这种方式的安装界面漂亮多了</p>
+:ET

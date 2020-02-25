@@ -1,0 +1,121 @@
+I"�2<ul id="markdown-toc">
+  <li><a href="#原因" id="markdown-toc-原因">原因</a></li>
+  <li><a href="#美梦泡汤" id="markdown-toc-美梦泡汤">美梦泡汤</a></li>
+  <li><a href="#延伸点-关于android下的编译指令" id="markdown-toc-延伸点-关于android下的编译指令">延伸点 关于Android下的编译指令</a></li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a></li>
+</ul>
+
+<h3 id="原因">原因</h3>
+<blockquote>
+  <p>最近在做HIDL相关的工作，HIDL暂且不谈， 现在我编译完HIDL的接口之后会给上层App<br />
+提供一个jar包，以供App来调用HIDL接口. 当时我的想法很简单，我编译完之后用studio来<br />
+引入jar包。然后我就可以美滋滋的调用了.</p>
+</blockquote>
+
+<h3 id="美梦泡汤">美梦泡汤</h3>
+<p>熟悉的在out/target/…目录下找到生成的jar包.add library. 在类里面直接引用jar包 <br />
+里面的方法. 走起. run。。。。<br />
+<img src="https://github.com/skypx/BlogResource/raw/master/other/hiden.png" alt="avatar" /></p>
+
+<p>恩? 怎么会找不到呢?看源码，看看这个究竟是一个什么类. 结果是一个hide的</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/other/hwbinderhide.png" alt="avatar" /></p>
+
+<p>原来SDK里面并没有这个类，因为是hide的。是不会提供API的.那问题来了。应该怎么用呢.别人是怎么用hide的?<br />
+google之，公认的方法: <br />
+<strong>1:</strong> 强大的反射功能<br />
+<strong>2:</strong> 编译framework jar生成 jar包 <br />
+<strong>3:</strong> 在系统下编译. 切配置mk文件</p>
+
+<p>第一种，第二种我就不多说了。我们就说下第三种.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">LOCAL_PATH</span> <span class="o">:=</span> <span class="err">$</span><span class="o">(</span><span class="n">call</span> <span class="n">my</span><span class="o">-</span><span class="n">dir</span><span class="o">)</span>
+<span class="n">include</span> <span class="err">$</span><span class="o">(</span><span class="no">CLEAR_VARS</span><span class="o">)</span>
+<span class="no">LOCAL_PACKAGE_NAME</span> <span class="o">:=</span> <span class="nc">HIDLdemo</span>
+<span class="no">LOCAL_SRC_FILES</span> <span class="o">:=</span> <span class="err">$</span><span class="o">(</span><span class="n">call</span> <span class="n">all</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="n">files</span><span class="o">-</span><span class="n">under</span><span class="o">,</span> <span class="n">src</span><span class="o">)</span>
+<span class="no">LOCAL_MODULE_TAGS</span> <span class="o">:=</span><span class="n">optional</span>
+<span class="no">LOCAL_PROGUARD_ENABLED</span> <span class="o">:=</span> <span class="n">disabled</span>
+<span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">:=</span> <span class="n">android</span><span class="o">-</span><span class="n">support</span><span class="o">-</span><span class="n">v4</span>
+<span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">-</span><span class="n">support</span><span class="o">-</span><span class="n">v7</span><span class="o">-</span><span class="n">appcompat</span>
+<span class="err">#</span><span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">-</span><span class="n">support</span><span class="o">-</span><span class="n">v7</span><span class="o">-</span><span class="n">gridlayout</span>
+<span class="err">#</span><span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">-</span><span class="n">support</span><span class="o">-</span><span class="n">v13</span>
+<span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">.</span><span class="na">hardware</span><span class="o">.</span><span class="na">gunder</span><span class="o">-</span><span class="no">V1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="kd">static</span>
+<span class="err">#</span><span class="no">LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES</span> <span class="o">:=</span> <span class="nl">pxwen:</span><span class="n">libs</span><span class="o">/</span><span class="n">classes</span><span class="o">.</span><span class="na">jar</span>
+<span class="no">LOCAL_DEX_PREOPT</span> <span class="o">=</span> <span class="kc">false</span>
+<span class="no">LOCAL_RESOURCE_DIR</span> <span class="o">:=</span> <span class="err">$</span><span class="o">(</span><span class="no">LOCAL_PATH</span><span class="o">)/</span><span class="n">res</span>
+<span class="no">LOCAL_RESOURCE_DIR</span> <span class="o">+=</span> <span class="n">prebuilts</span><span class="o">/</span><span class="n">sdk</span><span class="o">/</span><span class="n">current</span><span class="o">/</span><span class="n">support</span><span class="o">/</span><span class="n">v7</span><span class="o">/</span><span class="n">appcompat</span><span class="o">/</span><span class="n">res</span>
+<span class="err">#</span><span class="no">LOCAL_RESOURCE_DIR</span> <span class="o">+=</span> <span class="n">prebuilts</span><span class="o">/</span><span class="n">sdk</span><span class="o">/</span><span class="n">current</span><span class="o">/</span><span class="n">support</span><span class="o">/</span><span class="n">v7</span><span class="o">/</span><span class="n">gridlayout</span><span class="o">/</span><span class="n">res</span>
+
+
+<span class="err">#</span><span class="no">LOCAL_SDK_VERSION</span> <span class="o">:=</span> <span class="n">current</span>
+<span class="no">LOCAL_CERTIFICATE</span> <span class="o">:=</span> <span class="n">platform</span>
+<span class="err">#</span><span class="no">LOCAL_PRIVILEGED_MODULE</span> <span class="o">:=</span> <span class="kc">true</span>
+<span class="no">LOCAL_AAPT_FLAGS</span> <span class="o">:=</span> <span class="o">--</span><span class="n">auto</span><span class="o">-</span><span class="n">add</span><span class="o">-</span><span class="n">overlay</span>
+<span class="no">LOCAL_AAPT_FLAGS</span> <span class="o">+=</span> <span class="o">--</span><span class="n">extra</span><span class="o">-</span><span class="n">packages</span> <span class="n">android</span><span class="o">.</span><span class="na">support</span><span class="o">.</span><span class="na">v7</span><span class="o">.</span><span class="na">appcompat</span>
+<span class="err">#</span><span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">.</span><span class="na">hardware</span><span class="o">.</span><span class="na">fingerprint</span><span class="o">-</span><span class="no">V1</span><span class="o">.</span><span class="mi">0</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="kd">static</span>
+<span class="err">#</span><span class="no">LOCAL_SRC_FILES</span> <span class="o">:=</span> <span class="err">$</span><span class="o">(</span><span class="n">call</span> <span class="n">all</span><span class="o">-</span><span class="n">subdir</span><span class="o">-</span><span class="n">java</span><span class="o">-</span><span class="n">files</span><span class="o">)</span>
+<span class="n">include</span> <span class="err">$</span><span class="o">(</span><span class="no">BUILD_PACKAGE</span><span class="o">)</span>
+
+</code></pre></div></div>
+
+<p>主要在于这行
+<strong>LOCAL_SDK_VERSION := current</strong>
+这行加的话就会引用当前版本的sdk来进行编译，而不会引用framework下的去编译。去掉这行就可以引用hide的api了</p>
+
+<p>然后对mk属性里面的一些思考
+LOCAL_STATIC_JAVA_LIBRARIES 引用的静态库是从哪里来的？如何引用一个第三方的jar在mk里面?    <br />
+静态库是会打包进应用里面的.那就是说系统里面肯定会有这么一份的库文件来提供，那我们就去找例如 <br />
+android-support-v4，android-support-v7-appcompat</p>
+
+<p>果不其然, 在Framework下是有这个文件的
+<a href="http://androidxref.com/8.1.0_r33/xref/frameworks/support/v4/">http://androidxref.com/8.1.0_r33/xref/frameworks/support/v4/</a>
+<img src="https://github.com/skypx/BlogResource/raw/master/other/supportv4.png" alt="avatar" /></p>
+
+<p>同时查找out目录下的common文件夹里面查询v4.可以看到生成了jar文件. 而我们的LOCAL_STATIC_JAVA_LIBRARIES <br />
+其实就是链接到了这个jar包
+<img src="https://github.com/skypx/BlogResource/raw/master/other/outsupportv4.png" alt="avatar" /></p>
+
+<p>上面的是引用系统的，比如我们自己的第三方包怎么来引进来呢?</p>
+
+<p><strong>LOCAL_STATIC_JAVA_LIBRARIES</strong> 取jar库的别名，可以任意取值；</p>
+
+<p><strong>LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES</strong> 指定prebuiltjar库的规则，格式：别名:jar文件路径。注意：别名一定要与LOCAL_STATIC_JAVA_LIBRARIES里所取的别名一致，且不含.jar；jar文件路径一定要是真实的存放第三方jar包的路径。</p>
+
+<p>编译用 <strong>BUILD_MULTI_PREBUILT</strong>。</p>
+
+<h3 id="延伸点-关于android下的编译指令">延伸点 关于Android下的编译指令</h3>
+<p>Android 系统提供了三种指令用于编译，他们分别为make、mmm、mm，这三个指令编译的优缺点如下：</p>
+
+<ol>
+  <li>
+    <p><strong>make</strong>：不带任何参数，用于编译整个系统，编译时间比较长，除非是进行初次编译否则不建议此种做法； <br />
+例如：make camera2  z这种模式对应于单个模块的编译。它的优点是：会把该模块依赖的其他模块一起跟着编译。例如：make libmedia 就会把libmedia依赖库全部编译好。当然缺点也会很明显，那就是它会搜索整个源码来定位MediaProvider 模块所使用的Android.mk文件。并且还要判断该模块依赖的其他模块是否有修改。所以编译时间比较长</p>
+  </li>
+  <li>
+    <p><strong>mmm</strong>  packages/app/Camera2r:该命令编译指定目录下的目标模块，而不编译它所依赖其他模块。所以，若是初次编译，采用此种模式编译一个模块往往会报错，错误的原因就在于它依赖的其他模块没有一起编译。</p>
+  </li>
+  <li>
+    <p><strong>mm</strong> 这种编译方式一般需要cd 进入packages/app/Camera2目录，然后执行mm指令。该命令会编译当前目录下的模块。它和mmm一样，只编译目标模块。mm和mmm编译的速度都很快。</p>
+  </li>
+</ol>
+
+<p>如果用 make 模块名 这种方式会编译你在make依赖下的所有模块的. 下面我们做个实验编译packages/app/Camera2来做个实验</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">LOCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">:=</span> <span class="n">android</span><span class="o">-</span><span class="n">support</span><span class="o">-</span><span class="n">v13</span>
+<span class="mi">8L</span><span class="no">OCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">android</span><span class="o">-</span><span class="n">ex</span><span class="o">-</span><span class="n">camera2</span><span class="o">-</span><span class="n">portability</span>
+<span class="mi">9L</span><span class="no">OCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">xmp_toolkit</span>
+<span class="mi">10L</span><span class="no">OCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">glide</span>
+<span class="mi">11L</span><span class="no">OCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">guava</span>
+<span class="mi">12L</span><span class="no">OCAL_STATIC_JAVA_LIBRARIES</span> <span class="o">+=</span> <span class="n">jsr305</span>
+</code></pre></div></div>
+<p>之前我没有编译过Camera2相关的代码，我进入目录之后mm编译
+<img src="https://github.com/skypx/BlogResource/raw/master/other/camera2error.png" alt="avatar" /></p>
+
+<p>然后我用make Camera2 编译，顺利编过.然后查看out目录下是否android-ex-camera2-portability文件生成
+原来是没有的.</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/other/android-ex-camera2-portability.png" alt="avatar" /></p>
+
+<h3 id="总结">总结</h3>
+<p>在mk里面要指定的依赖库一定在源码项目里面有的。即使没有我们也要创造条件给编译出来，这样我们的应用才能引用到. <br />
+以前看mk的时候总是不知道为什么要这样加。这次算是有了一个初步的认识吧.未来我们要去探索更多的东西，编译流程 <br />
+以及mk文件</p>
+:ET

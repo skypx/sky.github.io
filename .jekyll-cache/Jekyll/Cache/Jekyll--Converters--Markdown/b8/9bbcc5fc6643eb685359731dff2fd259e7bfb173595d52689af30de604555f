@@ -1,0 +1,152 @@
+I"�I<ul id="markdown-toc">
+  <li><a href="#1下载android源码参考下面的链接" id="markdown-toc-1下载android源码参考下面的链接">1.下载Android源码参考下面的链接</a></li>
+  <li><a href="#2安装jdk" id="markdown-toc-2安装jdk">2.安装JDK</a></li>
+  <li><a href="#3下载tomcat" id="markdown-toc-3下载tomcat">3.下载tomcat</a></li>
+  <li><a href="#4下载opengrok" id="markdown-toc-4下载opengrok">4.下载opengrok</a></li>
+  <li><a href="#5下载生成索引的工具universal-ctags" id="markdown-toc-5下载生成索引的工具universal-ctags">5.下载生成索引的工具(universal-ctags)</a></li>
+  <li><a href="#7解压opengrok" id="markdown-toc-7解压opengrok">7.解压opengrok</a></li>
+  <li><a href="#8在opengrok目录下建立目录" id="markdown-toc-8在opengrok目录下建立目录">8.在opengrok目录下建立目录</a></li>
+  <li><a href="#9指定源码位置" id="markdown-toc-9指定源码位置">9.指定源码位置</a></li>
+  <li><a href="#10复制sourcewar到tomcat中" id="markdown-toc-10复制sourcewar到tomcat中">10.复制source.war到tomcat中</a></li>
+  <li><a href="#11配置configuration" id="markdown-toc-11配置configuration">11.配置CONFIGURATION：</a></li>
+  <li><a href="#12启动tomcat" id="markdown-toc-12启动tomcat">12.启动Tomcat</a></li>
+  <li><a href="#13执行如下命令" id="markdown-toc-13执行如下命令">13.执行如下命令</a></li>
+  <li><a href="#14打开httplocalhost8080source" id="markdown-toc-14打开httplocalhost8080source">14.打开http://localhost:8080/source/</a></li>
+  <li><a href="#15多项目支持" id="markdown-toc-15多项目支持">15.多项目支持</a></li>
+  <li><a href="#遇到的问题" id="markdown-toc-遇到的问题">遇到的问题</a></li>
+  <li><a href="#思考" id="markdown-toc-思考">思考::::</a></li>
+</ul>
+
+<blockquote>
+  <p>Ubuntu下用opengrok部署Android源码</p>
+</blockquote>
+
+<blockquote>
+  <p>前言<br />
+浏览代码的工具很多,像AndroidStudio, source insight等,但是像studio设置过于麻烦，并且还对内存有要求,source insight付费的且对新手不太友好.所以我们就用免费开源轻巧的神器.
+opengrok,下面我们来一步一步来实现，保证是你看到的最详细的教程</p>
+</blockquote>
+
+<h3 id="1下载android源码参考下面的链接">1.下载Android源码参考下面的链接</h3>
+<p>Android 官方 <a href="https://source.android.com/setup/build/downloading">https://source.android.com/setup/build/downloading</a> 需要自带梯子<br />
+国内清华大学镜像 <a href="https://mirrors.tuna.tsinghua.edu.cn/help/AOSP/">https://mirrors.tuna.tsinghua.edu.cn/help/AOSP/</a></p>
+
+<p>下载完成之后随便起一个名字比如我的是<strong>sourcecode19.02</strong></p>
+
+<h3 id="2安装jdk">2.安装JDK</h3>
+<p>sudo apt-get install openjdk-8-jdk</p>
+
+<h3 id="3下载tomcat">3.下载tomcat</h3>
+<p><a href="https://tomcat.apache.org/download-90.cgi">https://tomcat.apache.org/download-90.cgi</a> 我是用的9.0的</p>
+
+<h3 id="4下载opengrok">4.下载opengrok</h3>
+<p><a href="https://github.com/oracle/opengrok/releases">https://github.com/oracle/opengrok/releases</a> 我是用的1.3.1</p>
+
+<h3 id="5下载生成索引的工具universal-ctags">5.下载生成索引的工具(universal-ctags)</h3>
+<p>不要再使用 Exuberant ctags，因为已经不再维护更新，对于新版本的Opengrok支持度不好</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">1</span><span class="o">.</span> <span class="n">git</span> <span class="n">clone</span> <span class="nl">https:</span><span class="c1">//github.com/universal-ctags/ctags.git</span>
+<span class="mi">2</span><span class="o">.</span> <span class="err">下载完成后，进入</span><span class="n">ctags</span><span class="err">文件夹，依次执行以下命令，完成编译和安装：</span>
+   <span class="o">./</span><span class="n">autogen</span><span class="o">.</span><span class="na">sh</span>
+   <span class="o">./</span><span class="n">configure</span>
+   <span class="n">make</span>
+   <span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span>
+<span class="mi">3</span><span class="o">.</span> <span class="err">使用</span><span class="n">which</span> <span class="n">ctags</span><span class="err">查看安装路径，一会部署的时候要用到</span><span class="o">,</span><span class="err">我的路径是</span>
+   <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ctags</span>
+</code></pre></div></div>
+
+<h3 id="7解压opengrok">7.解压opengrok</h3>
+<p>这里需要注意下，需要一个磁盘空间比较大的地方,因为一会生成索引的时候会在opengrok的目录里面生成.</p>
+
+<h3 id="8在opengrok目录下建立目录">8.在opengrok目录下建立目录</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">mkdir</span> <span class="n">src</span> <span class="n">data</span> <span class="n">etc</span>
+<span class="err">#</span> <span class="n">src</span><span class="err">：源代码目录</span>
+<span class="err">#</span> <span class="n">data</span><span class="err">：存放</span><span class="n">opengrok</span><span class="err">索引文件目录</span>
+<span class="err">#</span> <span class="n">etc</span><span class="err">：放置</span><span class="n">configuration</span><span class="o">.</span><span class="na">xml</span><span class="err">的目录</span><span class="o">,</span><span class="n">xml</span><span class="err">文件由</span><span class="n">opengrok</span><span class="err">生成，我们只需要配置路径。</span>
+</code></pre></div></div>
+
+<h3 id="9指定源码位置">9.指定源码位置</h3>
+<p>原本需要把源码放到src下，因为我的android源代码放在了~/sourcecode19.02下，没必要把它整个移动到src下，所以在src下建了个sourcecode19.02的软连接指向它：</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cd</span> <span class="n">src</span>
+<span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="o">~/</span><span class="n">sourcecode19</span><span class="o">.</span><span class="mo">02</span> <span class="n">sourcecode19</span><span class="o">.</span><span class="mo">02</span>
+</code></pre></div></div>
+
+<h3 id="10复制sourcewar到tomcat中">10.复制source.war到tomcat中</h3>
+<p>像这样</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cp</span> <span class="o">~/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.2</span><span class="o">.</span><span class="mi">2</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">source</span><span class="o">.</span><span class="na">war</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">tomcat8</span><span class="o">.</span><span class="mi">5</span><span class="o">/</span><span class="n">webapps</span><span class="o">/</span>
+</code></pre></div></div>
+
+<h3 id="11配置configuration">11.配置CONFIGURATION：</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">在</span><span class="n">web</span><span class="o">.</span><span class="na">xml</span><span class="err">中修改</span><span class="n">configuration</span><span class="o">.</span><span class="na">xml</span><span class="err">的路径，</span>  
+<span class="n">vi</span> <span class="o">~/</span><span class="n">tomcat9</span><span class="o">.</span><span class="mi">0</span><span class="o">/</span><span class="n">webapps</span><span class="o">/</span><span class="n">source</span><span class="o">/</span><span class="no">WEB</span><span class="o">-</span><span class="no">INF</span><span class="o">/</span><span class="n">web</span><span class="o">.</span><span class="na">xml</span>  
+<span class="o">&lt;</span><span class="n">param</span><span class="o">-</span><span class="n">value</span><span class="o">&gt;~/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">configuration</span><span class="o">.</span><span class="na">xml</span><span class="o">&lt;/</span><span class="n">param</span><span class="o">-</span><span class="n">value</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<h3 id="12启动tomcat">12.启动Tomcat</h3>
+<p>应该会看到如下的错误<br />
+<strong>opengrok configuration parameter has not been configured in web.xml</strong>
+这是因为我们没有生成索引,接下来我们来生成索引</p>
+
+<h3 id="13执行如下命令">13.执行如下命令</h3>
+<p>我是把下面的命令封装成了一个.sh文件，执行的时候尽量用sudo sh xxxx.sh执行，</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="o">!/</span><span class="n">bin</span><span class="o">/</span><span class="n">bash</span>
+<span class="n">java</span> <span class="o">-</span><span class="nc">Xmx8g</span> <span class="err">\</span>
+<span class="o">-</span><span class="n">jar</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">opengrok</span><span class="o">.</span><span class="na">jar</span> <span class="err">\</span>
+<span class="o">-</span><span class="n">c</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">bin</span><span class="o">/</span><span class="n">ctags</span> <span class="err">\</span>
+<span class="o">-</span><span class="n">s</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">src</span> <span class="o">-</span><span class="n">d</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">data</span> <span class="o">-</span><span class="no">H</span> <span class="o">-</span><span class="no">P</span> <span class="o">-</span><span class="no">S</span> <span class="o">-</span><span class="no">G</span> <span class="o">-</span><span class="n">v</span> <span class="err">\</span>
+<span class="o">-</span><span class="no">W</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">configuration</span><span class="o">.</span><span class="na">xml</span> <span class="o">-</span><span class="no">U</span> <span class="nl">http:</span><span class="c1">//localhost:8080/source \</span>
+<span class="o">--</span><span class="n">depth</span> <span class="mi">100000</span> <span class="err">\</span>
+<span class="o">--</span><span class="n">progress</span> <span class="err">\</span>
+<span class="o">-</span><span class="n">m</span> <span class="mi">2048</span>
+</code></pre></div></div>
+
+<h3 id="14打开httplocalhost8080source">14.打开http://localhost:8080/source/</h3>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/other/opengrok.png" alt="avatar" /></p>
+
+<h3 id="15多项目支持">15.多项目支持</h3>
+<p>同样的办法在src下建立软链接,然后执行上面生成索引的脚本. 等生成完了之后就可以看到了. <br />
+删除项目的话，把刚才建立的软链接删掉，然后在重新生成索引.在浏览器看不到项目了.</p>
+
+<h3 id="遇到的问题">遇到的问题</h3>
+<p>部署完成之后，我满心欢喜的打开浏览器，浏览着代码，舒服.就在我打开某个文件的时候突然 <br />
+<img src="https://github.com/skypx/BlogResource/raw/master/other/opengrokerror.png" alt="avatar" /></p>
+
+<p>心里一惊，不可能啊。难道没有部署成功,如果没有部署成功的话，那别的文件我也访问不了呀.<br />
+那就是这个文件和别的文件不一样.鬼使神差的在目录下 <strong>ls -l</strong>  结果如下图. <br />
+<img src="https://github.com/skypx/BlogResource/raw/master/other/opengrokandroidbp.png" alt="avatar" /></p>
+
+<p>原来这个文件是软链接. 难道所有软链接都不可用？不会呀，opengrok team肯定会考虑这个问题的 <br />
+查看文档.cd opengrok-1.3.1/lib$/ <br />
+<strong>java -jar opengrok.jar</strong></p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span><span class="n">symlink</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">symlink</span>
+<span class="nc">Allow</span> <span class="k">this</span> <span class="n">symlink</span> <span class="n">to</span> <span class="n">be</span> <span class="n">followed</span><span class="o">.</span> <span class="nc">Option</span> <span class="n">may</span> <span class="n">be</span> <span class="n">repeated</span><span class="o">.</span>
+<span class="nc">By</span> <span class="k">default</span> <span class="n">only</span> <span class="n">symlinks</span> <span class="n">directly</span> <span class="n">under</span> <span class="n">source</span> <span class="n">root</span> <span class="n">directory</span>
+<span class="n">are</span> <span class="n">allowed</span><span class="o">.</span>
+</code></pre></div></div>
+<p>专门解决软链接的问题.</p>
+
+<p>按照要求在刚才那个shell脚本里面加入这个两行</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span><span class="n">symlink</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">sourcecode19</span><span class="o">.</span><span class="mo">02</span><span class="o">/</span><span class="n">bootstrap</span><span class="o">.</span><span class="na">bash</span> <span class="err">\</span>
+<span class="o">--</span><span class="n">symlink</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">sourcecode19</span><span class="o">.</span><span class="mo">02</span><span class="o">/</span><span class="nc">Android</span><span class="o">.</span><span class="na">bp</span> <span class="err">\</span>
+</code></pre></div></div>
+
+<p>重新执行脚本生成index，完美.这两个文件可以访问了. 这里记住我说的是文件.还有文件夹呢.
+文件夹里面的文件也不可以访问 <br />
+<img src="https://github.com/skypx/BlogResource/raw/master/other/dirlink.png" alt="avatar" /></p>
+
+<p>那是不是我把目录加如脚本里面也可以</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span><span class="n">symlink</span> <span class="o">/</span><span class="n">home</span><span class="o">/</span><span class="n">pxwen</span><span class="o">/</span><span class="nc">WorkStation</span><span class="o">/</span><span class="n">opengrok</span><span class="o">/</span><span class="n">opengrok</span><span class="o">-</span><span class="mf">1.3</span><span class="o">.</span><span class="mi">1</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">sourcecode19</span><span class="o">.</span><span class="mo">02</span><span class="o">/</span><span class="n">build</span><span class="o">/</span><span class="n">tools</span><span class="o">/</span> <span class="err">\</span>
+</code></pre></div></div>
+
+<p>重新执行脚本生成index, 结果文件夹里面的文件还是不可以访问。google了所有资料。没有找到解决办法.无奈，给opengrok team提交bug吧。让人家帮我指导下看是不是我哪里执行错了.</p>
+
+<p><a href="https://github.com/oracle/opengrok/issues/2913">https://github.com/oracle/opengrok/issues/2913</a></p>
+
+<p>结果,,,好像是opengrok的bug，应该是最新版本上的，他们已经复现了这个问题正在debug.</p>
+
+<h2 id="思考">思考::::</h2>
+<p>我是用最用的tomcat和最新的opengrok部署的.不确定是否和这个有关系. 别人部署遇到这个问题了吗? <br />
+还有我的android源码里面有好多软链接的形式. 不可能需要一行行的在脚本里面加。是否有其它的快捷方 <br />
+式。可以把我的项目里面的所有软链接都识别? 我们期待opengrok team 能尽快给我们反馈.</p>
+:ET

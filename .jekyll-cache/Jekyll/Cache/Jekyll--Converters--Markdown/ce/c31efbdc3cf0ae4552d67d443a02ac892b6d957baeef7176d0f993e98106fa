@@ -1,0 +1,129 @@
+I"k4<ul id="markdown-toc">
+  <li><a href="#我们都知道无论是用c或者c来开发程序用各种ide来开发即省时又省力-因为ide已经帮我们做好了编译过程隐藏了很多细节-以至于我们对整个过程一无所知今天我们就来看下编译的过程" id="markdown-toc-我们都知道无论是用c或者c来开发程序用各种ide来开发即省时又省力-因为ide已经帮我们做好了编译过程隐藏了很多细节-以至于我们对整个过程一无所知今天我们就来看下编译的过程">我们都知道无论是用C或者C++来开发程序,用各种IDE来开发即省时又省力 因为IDE已经帮我们做好了编译过程，隐藏了很多细节. 以至于我们对整个过程一无所知.今天我们就来看下编译的过程.</a></li>
+  <li><a href="#c语言的编译大致分为四部" id="markdown-toc-c语言的编译大致分为四部">C语言的编译大致分为四部:</a>    <ul>
+      <li><a href="#准备源码文件-helloc" id="markdown-toc-准备源码文件-helloc">准备源码文件 hello.c</a></li>
+      <li><a href="#1-预处理" id="markdown-toc-1-预处理">1. 预处理</a>        <ul>
+          <li><a href="#gcc--e-helloc--o-ac可以生成预处理后的文件" id="markdown-toc-gcc--e-helloc--o-ac可以生成预处理后的文件">gcc -E hello.c -o a.c可以生成预处理后的文件。</a></li>
+        </ul>
+      </li>
+      <li><a href="#2-把源代码翻译成汇编语言" id="markdown-toc-2-把源代码翻译成汇编语言">2. 把源代码翻译成汇编语言</a>        <ul>
+          <li><a href="#gcc--s-helloc--o-as可以生成汇编代码" id="markdown-toc-gcc--s-helloc--o-as可以生成汇编代码">gcc -S hello.c -o a.s可以生成汇编代码</a></li>
+        </ul>
+      </li>
+      <li><a href="#3-把汇编语言翻译成二进制文件" id="markdown-toc-3-把汇编语言翻译成二进制文件">3. 把汇编语言翻译成二进制文件</a>        <ul>
+          <li><a href="#gcc--c-helloc--o-ao-类uinx系统编译的结果生生成o文件windows系统是生成obj文件" id="markdown-toc-gcc--c-helloc--o-ao-类uinx系统编译的结果生生成o文件windows系统是生成obj文件">gcc -c hello.c -o a.o 类Uinx系统编译的结果生生成.o文件，Windows系统是生成.obj文件</a></li>
+        </ul>
+      </li>
+      <li><a href="#4-链接" id="markdown-toc-4-链接">4. 链接</a>        <ul>
+          <li><a href="#gcc-helloc--o-main-直接输出文件" id="markdown-toc-gcc-helloc--o-main-直接输出文件">gcc hello.c -o main 直接输出文件</a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a></li>
+</ul>
+
+<blockquote>
+  <p>C语言的真正编译过程</p>
+</blockquote>
+
+<h2 id="我们都知道无论是用c或者c来开发程序用各种ide来开发即省时又省力-因为ide已经帮我们做好了编译过程隐藏了很多细节-以至于我们对整个过程一无所知今天我们就来看下编译的过程">我们都知道无论是用C或者C++来开发程序,用各种IDE来开发即省时又省力 因为IDE已经帮我们做好了编译过程，隐藏了很多细节. 以至于我们对整个过程一无所知.今天我们就来看下编译的过程.</h2>
+
+<h2 id="c语言的编译大致分为四部">C语言的编译大致分为四部:</h2>
+
+<ol>
+  <li>预处理</li>
+  <li>把源代码翻译成汇编语言</li>
+  <li>把汇编语言翻译成二进制文件</li>
+  <li>链接</li>
+</ol>
+
+<p>我们分部来看下每一步都做了什么</p>
+
+<h3 id="准备源码文件-helloc">准备源码文件 hello.c</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdio</span><span class="o">.</span><span class="na">h</span><span class="o">&gt;</span>
+<span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">stdlib</span><span class="o">.</span><span class="na">h</span><span class="o">&gt;</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="o">()</span>
+<span class="o">{</span>
+        <span class="n">printf</span><span class="o">(</span><span class="s">"hello world!\n"</span><span class="o">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<h3 id="1-预处理">1. 预处理</h3>
+<h6 id="gcc--e-helloc--o-ac可以生成预处理后的文件">gcc -E hello.c -o a.c可以生成预处理后的文件。</h6>
+
+<p>通过查看文件内容和文件大小可以得知a.c讲stdio.h和stdlib.h包含了进来<br />
+预处理过程实质上是处理“#”，将#include包含的头文件直接拷贝到hello.c当中；将#define定义的宏进行替换，同时将代码中没用的注释部分删除等</p>
+
+<p>具体做的事儿如下：</p>
+
+<p>（1）将所有的#define删除，并且展开所有的宏定义。说白了就是字符替换<br />
+（2）处理所有的条件编译指令，#ifdef #ifndef #endif等，就是带#的那些<br />
+（3）处理#include，将#include指向的文件插入到该行处<br />
+（4）删除所有注释<br />
+（5）添加行号和文件标示，这样的在调试和编译出错的时候才知道是是哪个文件的哪一行<br />
+（6）保留#pragma编译器指令，因为编译器需要使用它们.(#pragma once 防止重复引用头文件)</p>
+
+<p>可以查看生成的a.c文件，把所有的include的文件插入进指定的位置. 所有宏都已经展开</p>
+
+<h3 id="2-把源代码翻译成汇编语言">2. 把源代码翻译成汇编语言</h3>
+<h6 id="gcc--s-helloc--o-as可以生成汇编代码">gcc -S hello.c -o a.s可以生成汇编代码</h6>
+<p>（1）词法分析，</p>
+
+<p>（2）语法分析</p>
+
+<p>（3）语义分析</p>
+
+<p>（4）优化后生成相应的汇编代码</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+ <span class="mi">1</span>         <span class="o">.</span><span class="na">file</span>   <span class="s">"hello.c"</span>
+ <span class="mi">2</span>         <span class="o">.</span><span class="na">section</span>        <span class="o">.</span><span class="na">rodata</span>
+ <span class="mi">3</span> <span class="o">.</span><span class="na">LC0</span><span class="o">:</span>
+ <span class="mi">4</span>         <span class="o">.</span><span class="na">string</span> <span class="s">"hello world!"</span>
+ <span class="mi">5</span>         <span class="o">.</span><span class="na">text</span>
+ <span class="mi">6</span>         <span class="o">.</span><span class="na">globl</span>  <span class="n">main</span>
+ <span class="mi">7</span>         <span class="o">.</span><span class="na">type</span>   <span class="n">main</span><span class="o">,</span> <span class="nd">@function</span>
+ <span class="mi">8</span> <span class="nl">main:</span>
+ <span class="mi">9</span> <span class="o">.</span><span class="na">LFB0</span><span class="o">:</span>
+<span class="mi">10</span>         <span class="o">.</span><span class="na">cfi_startproc</span>
+<span class="mi">11</span>         <span class="n">pushl</span>   <span class="o">%</span><span class="n">ebp</span>
+<span class="mi">12</span>         <span class="o">.</span><span class="na">cfi_def_cfa_offset</span> <span class="mi">8</span>
+<span class="mi">13</span>         <span class="o">.</span><span class="na">cfi_offset</span> <span class="mi">5</span><span class="o">,</span> <span class="o">-</span><span class="mi">8</span>
+<span class="mi">14</span>         <span class="n">movl</span>    <span class="o">%</span><span class="n">esp</span><span class="o">,</span> <span class="o">%</span><span class="n">ebp</span>
+<span class="mi">15</span>         <span class="o">.</span><span class="na">cfi_def_cfa_register</span> <span class="mi">5</span>
+<span class="mi">16</span>         <span class="n">andl</span>    <span class="err">$</span><span class="o">-</span><span class="mi">16</span><span class="o">,</span> <span class="o">%</span><span class="n">esp</span>
+<span class="mi">17</span>         <span class="n">subl</span>    <span class="err">$</span><span class="mi">16</span><span class="o">,</span> <span class="o">%</span><span class="n">esp</span>
+<span class="mi">18</span>         <span class="n">movl</span>    <span class="err">$</span><span class="o">.</span><span class="na">LC0</span><span class="o">,</span> <span class="o">(%</span><span class="n">esp</span><span class="o">)</span>
+<span class="mi">19</span>         <span class="n">call</span>    <span class="n">puts</span>
+<span class="mi">20</span>         <span class="n">movl</span>    <span class="err">$</span><span class="mi">0</span><span class="o">,</span> <span class="o">%</span><span class="n">eax</span>
+<span class="mi">21</span>         <span class="n">leave</span>
+<span class="mi">22</span>         <span class="o">.</span><span class="na">cfi_restore</span> <span class="mi">5</span>
+<span class="mi">23</span>         <span class="o">.</span><span class="na">cfi_def_cfa</span> <span class="mi">4</span><span class="o">,</span> <span class="mi">4</span>
+<span class="mi">24</span>         <span class="n">ret</span>
+<span class="mi">25</span>         <span class="o">.</span><span class="na">cfi_endproc</span>
+<span class="mi">26</span> <span class="o">.</span><span class="na">LFE0</span><span class="o">:</span>
+<span class="mi">27</span>         <span class="o">.</span><span class="na">size</span>   <span class="n">main</span><span class="o">,</span> <span class="o">.-</span><span class="n">main</span>
+<span class="mi">28</span>         <span class="o">.</span><span class="na">ident</span>  <span class="s">"GCC: (Ubuntu/Linaro 4.6.3-1ubuntu5) 4.6.3"</span>
+<span class="mi">29</span>         <span class="o">.</span><span class="na">section</span>        <span class="o">.</span><span class="na">note</span><span class="o">.</span><span class="na">GNU</span><span class="o">-</span><span class="n">stack</span><span class="o">,</span><span class="s">""</span><span class="o">,</span><span class="nd">@progbits</span>
+</code></pre></div></div>
+<h3 id="3-把汇编语言翻译成二进制文件">3. 把汇编语言翻译成二进制文件</h3>
+<h6 id="gcc--c-helloc--o-ao-类uinx系统编译的结果生生成o文件windows系统是生成obj文件">gcc -c hello.c -o a.o 类Uinx系统编译的结果生生成.o文件，Windows系统是生成.obj文件</h6>
+<p>计算机只识别二进制文件</p>
+
+<h3 id="4-链接">4. 链接</h3>
+<h5 id="gcc-helloc--o-main-直接输出文件">gcc hello.c -o main 直接输出文件</h5>
+<p>就像刚才的hello.c它使用到了C标准库的东西“printf”，但是编译过程只是把源文件翻译成二进制而已，这个二进制还不能直接执行，这个时候就需要做一个动作，将翻译成的二进制与需要用到库绑定在一块</p>
+
+<p>举个例子，像printf函数是系统定义的函数，有系统库，我们只是做了一个动作,把库文件和我们的文件做了一个链接:
+可以通过<strong>ldd</strong>的指令查看</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pxwen</span><span class="nd">@pxwen</span><span class="o">-</span><span class="nl">Think:</span><span class="o">~/</span><span class="nc">Workstation</span><span class="o">/</span><span class="n">cmake</span><span class="o">/</span><span class="n">studycmake</span><span class="err">$</span> <span class="n">ldd</span> <span class="n">main</span>
+	<span class="n">linux</span><span class="o">-</span><span class="n">vdso</span><span class="o">.</span><span class="na">so</span><span class="o">.</span><span class="mi">1</span> <span class="o">=&gt;</span>  <span class="o">(</span><span class="mh">0x00007ffcacb9d000</span><span class="o">)</span>
+	<span class="n">libc</span><span class="o">.</span><span class="na">so</span><span class="o">.</span><span class="mi">6</span> <span class="o">=&gt;</span> <span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="o">.</span><span class="na">so</span><span class="o">.</span><span class="mi">6</span> <span class="o">(</span><span class="mh">0x00007fd1e3828000</span><span class="o">)</span>
+	<span class="o">/</span><span class="n">lib64</span><span class="o">/</span><span class="n">ld</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span><span class="o">.</span><span class="na">so</span><span class="o">.</span><span class="mi">2</span> <span class="o">(</span><span class="mh">0x000055931be8f000</span><span class="o">)</span>
+
+</code></pre></div></div>
+<p>可以看到是和系统下的库做了一个链接</p>
+
+<h2 id="总结">总结</h2>
+<p>其实我们直接可以gcc hello.c 就可以输出一个在Linux下的可执行文件, 我只是把这个过程做了一个分步，希望大家看的更清楚一点. gcc hello.c 其实是把这四个步骤合并了,希望对大家有点帮助。</p>
+:ET

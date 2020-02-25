@@ -1,0 +1,168 @@
+I"�2<ul id="markdown-toc">
+  <li><a href="#什么是zsl" id="markdown-toc-什么是zsl">什么是ZSL</a></li>
+  <li><a href="#一normal-mode" id="markdown-toc-一normal-mode">一．Normal mode：</a></li>
+  <li><a href="#二-zsl-mode" id="markdown-toc-二-zsl-mode">二． ZSL Mode：</a></li>
+  <li><a href="#zsl-分为两种modesingle-shotburst-mode" id="markdown-toc-zsl-分为两种modesingle-shotburst-mode">Zsl 分为两种mode：single shot；burst mode</a></li>
+  <li><a href="#三拍照具体实现过程" id="markdown-toc-三拍照具体实现过程">三．拍照具体实现过程</a></li>
+  <li><a href="#针对api1来说" id="markdown-toc-针对api1来说">针对API1来说</a></li>
+  <li><a href="#针对api2来说" id="markdown-toc-针对api2来说">针对API2来说</a></li>
+  <li><a href="#具体的code方式" id="markdown-toc-具体的code方式">具体的code方式</a></li>
+  <li><a href="#总结" id="markdown-toc-总结">总结</a>    <ul>
+      <li><a href="#下步计划-抽出snapdragon-camera2-zsl-部分" id="markdown-toc-下步计划-抽出snapdragon-camera2-zsl-部分">下步计划, 抽出snapdragon, camera2 ZSL 部分</a></li>
+    </ul>
+  </li>
+</ul>
+
+<h1 id="什么是zsl">什么是ZSL</h1>
+<ul>
+  <li>
+    <p>ZSL (zero shutter lag)：零秒延迟</p>
+  </li>
+  <li>
+    <p>在日常生活中，使用手机camera拍照的时候往往会有一些延迟的体验。ZSL，就是为了消除这种延迟，提供一种“拍即视”的体验而被开发出来。</p>
+  </li>
+</ul>
+
+<h1 id="一normal-mode">一．Normal mode：</h1>
+<ul>
+  <li>一般情况下，拍照流程如下，从图中我们可以看到data flow 以及shutter lag （延迟）是如何产生的</li>
+</ul>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_take_picture.png" alt="avatar" /></p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_data_flow.png" alt="avatar" /></p>
+
+<h1 id="二-zsl-mode">二． ZSL Mode：</h1>
+
+<p>通过zsl 技术，最大程度上减小了这种延迟，如下图：
+<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_take_picture.png" alt="avatar" />
+<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_data_flow.png" alt="avatar" /></p>
+
+<h1 id="zsl-分为两种modesingle-shotburst-mode">Zsl 分为两种mode：single shot；burst mode</h1>
+
+<ol>
+  <li>single shot：</li>
+</ol>
+
+<p>预览之后，sensor 和VFE 会产生快照和预览帧，并且会把最新的一些帧保留在图像buffer中。一旦“取图”事件被触发，系统就会在第一时间内从图像buffer中把相关的图像找出并返回给用户，这就是ZSL,零秒延迟。</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_single_shot.png" alt="avatar" /></p>
+
+<ol>
+  <li>burst shot：</li>
+</ol>
+
+<p>Burst mode 是single shot 特征的自然延伸。此功能允许用户捕获的不仅是当前帧，但也有几个帧之前和之后的当前帧的少数几个帧，从而捕捉到一个序列的图像到内存。这将为用户提供不同的快照时间，从中选择一个或多个帧来保存。应用了多少帧的选择自由是多少追溯帧和未来帧在记忆的局限性上，追溯和未来帧是相对于真正的快门时间的。</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_burst_shot.png" alt="avatar" /></p>
+
+<h1 id="三拍照具体实现过程">三．拍照具体实现过程</h1>
+
+<ol>
+  <li>
+    <p>Implementation without ZSL：
+<img src="https://github.com/skypx/BlogResource/raw/master/camera/normal_hal.png" alt="avatar" /></p>
+  </li>
+  <li>
+    <p>Implementation with ZSL：
+<img src="https://github.com/skypx/BlogResource/raw/master/camera/zsl_hal.png" alt="avatar" /></p>
+  </li>
+</ol>
+
+<p>参考链接:</p>
+
+<p><a href="http://blog.chinaunix.net/uid-7213935-id-5753468.html">http://blog.chinaunix.net/uid-7213935-id-5753468.html</a>
+<a href="https://blog.csdn.net/kris_fei/article/details/77057473">https://blog.csdn.net/kris_fei/article/details/77057473</a></p>
+
+<blockquote>
+  <p>一篇关于摄像头基础部分的文章:高通Camera架构</p>
+</blockquote>
+<p><a href="https://www.cnblogs.com/whw19818/p/5853407.html">https://www.cnblogs.com/whw19818/p/5853407.html</a></p>
+
+<p>——————————————<strong>下面说下Code的方式</strong>—————————————————-</p>
+<h1 id="针对api1来说">针对API1来说</h1>
+<ul>
+  <li>高通会提供关于ZSL的patch给厂商. 厂商通过设置 <code class="highlighter-rouge">setZSLMode</code> 默认是隐藏的方法. 具体对于队列的维护
+放在了Framework层去处理</li>
+</ul>
+
+<h1 id="针对api2来说">针对API2来说</h1>
+<ul>
+  <li>
+    <p>Goolge建议对于缓存队列的处理放在App 层来处理 具体可以参考如下的链接
+<a href="http://androidxref.com/9.0.0_r3/search?q=%22zsl%22&amp;project=packages">Camera2 ZSL</a></p>
+
+    <p>这里要注意的是需要设置模板<code class="highlighter-rouge">TEMPLATE_ZERO_SHUTTER_LAG</code> 来通知HAL切换模板</p>
+  </li>
+</ul>
+
+<h1 id="具体的code方式">具体的code方式</h1>
+
+<ol>
+  <li>创建Session的方式 <code class="highlighter-rouge">createReprocessableCaptureSessionByConfigurations</code>
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">camera</span><span class="o">.</span><span class="na">createReprocessableCaptureSessionByConfigurations</span><span class="o">(</span><span class="n">inputConfiguration</span><span class="o">,</span> <span class="n">outputs</span><span class="o">,</span><span class="n">sessionListener</span><span class="o">,</span> <span class="n">handler</span><span class="o">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>设置<code class="highlighter-rouge">InputConfiguration</code>, 还有<code class="highlighter-rouge">ImageWrite</code>
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nc">InputConfiguration</span> <span class="n">inputConfiguration</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">InputConfiguration</span>
+                           <span class="nc">Size</span><span class="o">.</span><span class="na">width</span><span class="o">(),</span> <span class="nc">Size</span><span class="o">.</span><span class="na">height</span><span class="o">(),</span>
+                           <span class="nc">ImageFormat</span><span class="o">.</span><span class="na">YUV_420_888</span><span class="o">;</span>
+</code></pre></div>    </div>
+  </li>
+  <li>创建新的ImageReader来配置和InputConfiguration一样的参数
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nc">ImageReader</span> <span class="n">mZslImageReader</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ImageReader</span><span class="o">(</span><span class="nc">Size</span><span class="o">.</span><span class="na">width</span><span class="o">(),</span> <span class="nc">Size</span><span class="o">.</span><span class="na">height</span><span class="o">(),</span>
+                           <span class="nc">ImageFormat</span><span class="o">.</span><span class="na">PRIVATE</span><span class="o">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>把zslIamgereader传入setRepeatingBurst, 这样就可以获取这个流了
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="nc">CaptureRequest</span><span class="o">.</span><span class="na">Builder</span> <span class="n">reqBuilder</span> <span class="o">=</span> <span class="n">cameraDevice</span><span class="o">.</span><span class="na">createCaptureRequest</span><span class="o">(</span><span class="n">templateType</span><span class="o">);</span>
+  <span class="n">reqBuilder</span><span class="o">.</span><span class="na">addTarget</span><span class="o">(</span><span class="n">mZslImageReader</span><span class="o">.</span><span class="na">getSurface</span><span class="o">);</span>
+  <span class="n">mCaptureSession</span><span class="o">.</span><span class="na">setRepeatingBurst</span><span class="o">(</span><span class="n">reqBuilder</span><span class="o">....);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>设置ZslImageReader的callback. onImageAvailable 可用的时候放入对列
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="kd">private</span> <span class="kd">final</span> <span class="nc">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="nc">Image</span><span class="o">&gt;</span> <span class="n">mQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">LinkedBlockingQueue</span><span class="o">&lt;</span><span class="nc">Image</span><span class="o">&gt;();</span>
+  <span class="n">mQueue</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="nc">Image</span><span class="o">)</span>
+</code></pre></div>    </div>
+    <p><a href="http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/utils/src/android/hardware/camera2/cts/CameraTestUtils.java#286">参考CTS</a></p>
+  </li>
+  <li>设置ImageWriter
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="err">这个</span><span class="n">surface</span><span class="err">其实就是设置</span><span class="n">inputconfig</span><span class="err">的时候底层创建的</span><span class="n">surface</span>
+  <span class="nc">ImageWriter</span> <span class="n">mImageWriter</span> <span class="o">=</span> <span class="nc">ImageWriter</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">session</span><span class="o">.</span><span class="na">getInputSurface</span><span class="o">(),</span> <span class="mi">2</span><span class="o">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>把LinkedBlockingQueue里面的image送给下面去重新操作, 同时把result也放入进去
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">mImageWriter</span><span class="o">.</span><span class="na">queueInputImage</span><span class="o">(</span><span class="n">mQueue</span><span class="o">.</span><span class="na">getImage</span><span class="o">());</span><span class="c1">//伪代码</span>
+  <span class="n">captureRequestBuilder</span> <span class="o">=</span> <span class="n">mCameraDevice</span><span class="o">.</span>
+                           <span class="nf">createReprocessCaptureRequest</span><span class="o">(</span><span class="n">mQueue</span><span class="o">.</span><span class="na">getResult</span><span class="o">());</span>
+</code></pre></div>    </div>
+  </li>
+  <li>重新去拍照, 用图片的ImageReader
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="n">captureRequestBuilder</span><span class="o">.</span><span class="na">addTarget</span><span class="o">(</span><span class="n">mCaptureImageReader</span><span class="o">.</span><span class="na">getSurface</span><span class="o">());</span>
+  <span class="n">mCaptureSession</span><span class="o">.</span><span class="na">capture</span><span class="o">(</span><span class="n">captureRequestBuilder</span><span class="o">.</span><span class="na">build</span><span class="o">(),</span>
+                           <span class="n">captureRequestCallback</span><span class="o">,</span> <span class="n">mCameraDeviceHandler</span><span class="o">.</span><span class="na">getDeviceThreadHandler</span><span class="o">());</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<blockquote>
+  <p>我整理了一张图片大致流程是这样的
+  <img src="https://github.com/skypx/BlogResource/raw/master/camera/zslnew.png" alt="avatar" /></p>
+</blockquote>
+
+<p>## 参考了CTS相关代码
+  <a href="http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/utils/src/android/hardware/camera2/cts/CameraTestUtils.java">CameraCts - CameraTestUtils</a></p>
+
+<p><a href="http://androidxref.com/9.0.0_r3/xref/cts/tests/camera/src/android/hardware/camera2/cts/ReprocessCaptureTest.java">CameraCts - ReprocessCaptureTest</a></p>
+
+<h1 id="总结">总结</h1>
+<ul>
+  <li>
+    <p>不管是用API1 的方式还是API2的方式去ZSL拍照. 都是为了提升拍照的速度, 和普通的拍照的较大区别是先处理和后处理
+普通的拍照是把图片在HAL层先处理白平衡.降噪等的处理. 而ZSL拍照是先获取YUV数据,然后在进行InputConfig的后处理
+其实ImageWrite write到了InputConfig里面</p>
+
+    <h2 id="下步计划-抽出snapdragon-camera2-zsl-部分">下步计划, 抽出snapdragon, camera2 ZSL 部分</h2>
+  </li>
+</ul>
+:ET

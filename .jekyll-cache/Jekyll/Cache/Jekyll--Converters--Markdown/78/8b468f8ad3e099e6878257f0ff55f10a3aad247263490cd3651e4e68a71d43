@@ -1,0 +1,356 @@
+I"��<ul id="markdown-toc">
+  <li><a href="#前言" id="markdown-toc-前言">前言</a></li>
+  <li><a href="#11-涉及到的源码" id="markdown-toc-11-涉及到的源码">1.1 涉及到的源码</a></li>
+  <li><a href="#12-在zygote中是怎么创建的" id="markdown-toc-12-在zygote中是怎么创建的">1.2 在zygote中是怎么创建的</a></li>
+</ul>
+<h4 id="前言">前言</h4>
+<p>在上一篇中已经提到了，分为两步，一步是开始activity，一步是创建进程，在上面的一篇中已经把开启<br />
+开启activity的部分讲到了，下面说下应用是怎么创建进程的.其中大量参考了gityuan先生的博客。并<br />
+根据博客的指示，来把代码跟了一遍.</p>
+<h4 id="11-涉及到的源码">1.1 涉及到的源码</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">android</span><span class="o">/</span><span class="n">internal</span><span class="o">/</span><span class="n">os</span><span class="o">/</span>
+    <span class="o">-</span> <span class="nc">ZygoteInit</span><span class="o">.</span><span class="na">java</span>
+    <span class="o">-</span> <span class="nc">ZygoteConnection</span><span class="o">.</span><span class="na">java</span>
+    <span class="o">-</span> <span class="nc">RuntimeInit</span><span class="o">.</span><span class="na">java</span>
+    <span class="o">-</span> <span class="nc">Zygote</span><span class="o">.</span><span class="na">java</span>
+
+<span class="o">/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">android</span><span class="o">/</span><span class="n">os</span><span class="o">/</span><span class="nc">Process</span><span class="o">.</span><span class="na">java</span>
+<span class="o">/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">jni</span><span class="o">/</span><span class="n">com_android_internal_os_Zygote</span><span class="o">.</span><span class="na">cpp</span>
+<span class="o">/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">jni</span><span class="o">/</span><span class="nc">AndroidRuntime</span><span class="o">.</span><span class="na">cpp</span>
+<span class="o">/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">cmds</span><span class="o">/</span><span class="n">app_process</span><span class="o">/</span><span class="n">App_main</span><span class="o">.</span><span class="na">cpp</span> <span class="err">（内含</span><span class="n">AppRuntime</span><span class="err">类）</span>
+
+<span class="o">/</span><span class="n">bionic</span><span class="o">/</span><span class="n">libc</span><span class="o">/</span><span class="n">bionic</span><span class="o">/</span><span class="n">fork</span><span class="o">.</span><span class="na">cpp</span>
+<span class="o">/</span><span class="n">bionic</span><span class="o">/</span><span class="n">libc</span><span class="o">/</span><span class="n">bionic</span><span class="o">/</span><span class="n">pthread_atfork</span><span class="o">.</span><span class="na">cpp</span>
+
+<span class="o">/</span><span class="n">libcore</span><span class="o">/</span><span class="n">dalvik</span><span class="o">/</span><span class="n">src</span><span class="o">/</span><span class="n">main</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">dalvik</span><span class="o">/</span><span class="n">system</span><span class="o">/</span><span class="nc">ZygoteHooks</span><span class="o">.</span><span class="na">java</span>
+<span class="o">/</span><span class="n">art</span><span class="o">/</span><span class="n">runtime</span><span class="o">/</span><span class="kd">native</span><span class="o">/</span><span class="n">dalvik_system_ZygoteHooks</span><span class="o">.</span><span class="na">cc</span>
+<span class="o">/</span><span class="n">art</span><span class="o">/</span><span class="n">runtime</span><span class="o">/</span><span class="nc">Runtime</span><span class="o">.</span><span class="na">cc</span>
+<span class="o">/</span><span class="n">art</span><span class="o">/</span><span class="n">runtime</span><span class="o">/</span><span class="nc">Thread</span><span class="o">.</span><span class="na">cc</span>
+<span class="o">/</span><span class="n">art</span><span class="o">/</span><span class="n">runtime</span><span class="o">/</span><span class="n">signal_catcher</span><span class="o">.</span><span class="na">cc</span>
+</code></pre></div></div>
+
+<p>在前面说到，启动进程的时候会调用的AMS类里面的startProcessLocked方法，最终还会调用到<br />
+Process.start这个方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="nc">ProcessStartResult</span> <span class="nf">start</span><span class="o">(</span><span class="kd">final</span> <span class="nc">String</span> <span class="n">processClass</span><span class="o">,</span>
+<span class="mi">480</span>                                  <span class="kd">final</span> <span class="nc">String</span> <span class="n">niceName</span><span class="o">,</span>
+<span class="mi">481</span>                                  <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">gid</span><span class="o">,</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">gids</span><span class="o">,</span>
+<span class="mi">482</span>                                  <span class="kt">int</span> <span class="n">runtimeFlags</span><span class="o">,</span> <span class="kt">int</span> <span class="n">mountExternal</span><span class="o">,</span>
+<span class="mi">483</span>                                  <span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span>
+<span class="mi">484</span>                                  <span class="nc">String</span> <span class="n">seInfo</span><span class="o">,</span>
+<span class="mi">485</span>                                  <span class="nc">String</span> <span class="n">abi</span><span class="o">,</span>
+<span class="mi">486</span>                                  <span class="nc">String</span> <span class="n">instructionSet</span><span class="o">,</span>
+<span class="mi">487</span>                                  <span class="nc">String</span> <span class="n">appDataDir</span><span class="o">,</span>
+<span class="mi">488</span>                                  <span class="nc">String</span> <span class="n">invokeWith</span><span class="o">,</span>
+<span class="mi">489</span>                                  <span class="nc">String</span><span class="o">[]</span> <span class="n">zygoteArgs</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">490</span>        <span class="k">return</span> <span class="n">zygoteProcess</span><span class="o">.</span><span class="na">start</span><span class="o">(</span><span class="n">processClass</span><span class="o">,</span> <span class="n">niceName</span><span class="o">,</span> <span class="n">uid</span><span class="o">,</span> <span class="n">gid</span><span class="o">,</span> <span class="n">gids</span><span class="o">,</span>
+<span class="mi">491</span>                    <span class="n">runtimeFlags</span><span class="o">,</span> <span class="n">mountExternal</span><span class="o">,</span> <span class="n">targetSdkVersion</span><span class="o">,</span> <span class="n">seInfo</span><span class="o">,</span>
+<span class="mi">492</span>                    <span class="n">abi</span><span class="o">,</span> <span class="n">instructionSet</span><span class="o">,</span> <span class="n">appDataDir</span><span class="o">,</span> <span class="n">invokeWith</span><span class="o">,</span> <span class="n">zygoteArgs</span><span class="o">);</span>
+<span class="mi">493</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>接着调用ZygoteProcess.java里面的startViaZygote方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="nc">Process</span><span class="o">.</span><span class="na">ProcessStartResult</span> <span class="nf">startViaZygote</span><span class="o">(</span><span class="kd">final</span> <span class="nc">String</span> <span class="n">processClass</span><span class="o">,</span>
+<span class="mi">358</span>                                                      <span class="kd">final</span> <span class="nc">String</span> <span class="n">niceName</span><span class="o">,</span>
+<span class="mi">359</span>                                                      <span class="kd">final</span> <span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">gid</span><span class="o">,</span>
+<span class="mi">360</span>                                                      <span class="kd">final</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">gids</span><span class="o">,</span>
+<span class="mi">361</span>                                                      <span class="kt">int</span> <span class="n">runtimeFlags</span><span class="o">,</span> <span class="kt">int</span> <span class="n">mountExternal</span><span class="o">,</span>
+<span class="mi">362</span>                                                      <span class="kt">int</span> <span class="n">targetSdkVersion</span><span class="o">,</span>
+<span class="mi">363</span>                                                      <span class="nc">String</span> <span class="n">seInfo</span><span class="o">,</span>
+<span class="mi">364</span>                                                      <span class="nc">String</span> <span class="n">abi</span><span class="o">,</span>
+<span class="mi">365</span>                                                      <span class="nc">String</span> <span class="n">instructionSet</span><span class="o">,</span>
+<span class="mi">366</span>                                                      <span class="nc">String</span> <span class="n">appDataDir</span><span class="o">,</span>
+<span class="mi">367</span>                                                      <span class="nc">String</span> <span class="n">invokeWith</span><span class="o">,</span>
+<span class="mi">368</span>                                                      <span class="kt">boolean</span> <span class="n">startChildZygote</span><span class="o">,</span>
+<span class="mi">369</span>                                                      <span class="nc">String</span><span class="o">[]</span> <span class="n">extraArgs</span><span class="o">)</span>
+<span class="mi">370</span>                                                      <span class="kd">throws</span> <span class="nc">ZygoteStartFailedEx</span> <span class="o">{</span>
+<span class="mi">371</span>    <span class="o">.........................................................................</span>
+<span class="mi">436</span>
+<span class="mi">437</span>        <span class="kd">synchronized</span><span class="o">(</span><span class="n">mLock</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">438</span>            <span class="k">return</span> <span class="n">zygoteSendArgsAndGetResult</span><span class="o">(</span><span class="n">openZygoteSocketIfNeeded</span><span class="o">(</span><span class="n">abi</span><span class="o">),</span> <span class="n">argsForZygote</span><span class="o">);</span>
+<span class="mi">439</span>        <span class="o">}</span>
+<span class="mi">440</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>向在zygote进程里面注册的socket发送消息，在zygote进程里面注册新的进程.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="nc">Process</span><span class="o">.</span><span class="na">ProcessStartResult</span> <span class="nf">zygoteSendArgsAndGetResult</span><span class="o">(</span>
+<span class="mi">281</span>            <span class="nc">ZygoteState</span> <span class="n">zygoteState</span><span class="o">,</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">String</span><span class="o">&gt;</span> <span class="n">args</span><span class="o">)</span>
+<span class="mi">282</span>            <span class="kd">throws</span> <span class="nc">ZygoteStartFailedEx</span> <span class="o">{</span>
+<span class="mi">283</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">284</span>            <span class="c1">// Throw early if any of the arguments are malformed. This means we can</span>
+<span class="mi">285</span>            <span class="c1">// avoid writing a partial response to the zygote.</span>
+<span class="mi">286</span>            <span class="kt">int</span> <span class="n">sz</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+<span class="mi">287</span>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">sz</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="mi">288</span>                <span class="k">if</span> <span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">).</span><span class="na">indexOf</span><span class="o">(</span><span class="sc">'\n'</span><span class="o">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">289</span>                    <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="s">"embedded newlines not allowed"</span><span class="o">);</span>
+<span class="mi">290</span>                <span class="o">}</span>
+<span class="mi">291</span>            <span class="o">}</span>
+<span class="mi">292</span>
+<span class="mi">293</span>            <span class="cm">/**
+294             * See com.android.internal.os.SystemZygoteInit.readArgumentList()
+295             * Presently the wire format to the zygote process is:
+296             * a) a count of arguments (argc, in essence)
+297             * b) a number of newline-separated argument strings equal to count
+298             *
+299             * After the zygote process reads these it will write the pid of
+300             * the child or -1 on failure, followed by boolean to
+301             * indicate whether a wrapper process was used.
+302             */</span>
+<span class="mi">303</span>            <span class="kd">final</span> <span class="nc">BufferedWriter</span> <span class="n">writer</span> <span class="o">=</span> <span class="n">zygoteState</span><span class="o">.</span><span class="na">writer</span><span class="o">;</span>
+               <span class="c1">//拿到输入流，写入服务器</span>
+<span class="mi">304</span>            <span class="kd">final</span> <span class="nc">DataInputStream</span> <span class="n">inputStream</span> <span class="o">=</span> <span class="n">zygoteState</span><span class="o">.</span><span class="na">inputStream</span><span class="o">;</span>
+<span class="mi">305</span>
+<span class="mi">306</span>            <span class="n">writer</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="nc">Integer</span><span class="o">.</span><span class="na">toString</span><span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">size</span><span class="o">()));</span>
+<span class="mi">307</span>            <span class="n">writer</span><span class="o">.</span><span class="na">newLine</span><span class="o">();</span>
+<span class="mi">308</span>
+<span class="mi">309</span>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">sz</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+<span class="mi">310</span>                <span class="nc">String</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">311</span>                <span class="n">writer</span><span class="o">.</span><span class="na">write</span><span class="o">(</span><span class="n">arg</span><span class="o">);</span>
+<span class="mi">312</span>                <span class="n">writer</span><span class="o">.</span><span class="na">newLine</span><span class="o">();</span>
+<span class="mi">313</span>            <span class="o">}</span>
+<span class="mi">314</span>
+<span class="mi">315</span>            <span class="n">writer</span><span class="o">.</span><span class="na">flush</span><span class="o">();</span>
+<span class="mi">316</span>
+<span class="mi">317</span>            <span class="c1">// Should there be a timeout on this?</span>
+<span class="mi">318</span>            <span class="nc">Process</span><span class="o">.</span><span class="na">ProcessStartResult</span> <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Process</span><span class="o">.</span><span class="na">ProcessStartResult</span><span class="o">();</span>
+<span class="mi">319</span>
+<span class="mi">320</span>            <span class="c1">// Always read the entire result from the input stream to avoid leaving</span>
+<span class="mi">321</span>            <span class="c1">// bytes in the stream for future process starts to accidentally stumble</span>
+<span class="mi">322</span>            <span class="c1">// upon.</span>
+              <span class="c1">//等待返回的pid</span>
+<span class="mi">323</span>            <span class="n">result</span><span class="o">.</span><span class="na">pid</span> <span class="o">=</span> <span class="n">inputStream</span><span class="o">.</span><span class="na">readInt</span><span class="o">();</span>
+<span class="mi">324</span>            <span class="n">result</span><span class="o">.</span><span class="na">usingWrapper</span> <span class="o">=</span> <span class="n">inputStream</span><span class="o">.</span><span class="na">readBoolean</span><span class="o">();</span>
+<span class="mi">325</span>
+<span class="mi">326</span>            <span class="k">if</span> <span class="o">(</span><span class="n">result</span><span class="o">.</span><span class="na">pid</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">327</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="s">"fork() failed"</span><span class="o">);</span>
+<span class="mi">328</span>            <span class="o">}</span>
+<span class="mi">329</span>            <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+<span class="mi">330</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">IOException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">331</span>            <span class="n">zygoteState</span><span class="o">.</span><span class="na">close</span><span class="o">();</span>
+<span class="mi">332</span>            <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="n">ex</span><span class="o">);</span>
+<span class="mi">333</span>        <span class="o">}</span>
+<span class="mi">334</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>去链接远程的socket</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@GuardedBy</span><span class="o">(</span><span class="s">"mLock"</span><span class="o">)</span>
+<span class="mi">563</span>    <span class="kd">private</span> <span class="nc">ZygoteState</span> <span class="nf">openZygoteSocketIfNeeded</span><span class="o">(</span><span class="nc">String</span> <span class="n">abi</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">ZygoteStartFailedEx</span> <span class="o">{</span>
+<span class="mi">564</span>        <span class="nc">Preconditions</span><span class="o">.</span><span class="na">checkState</span><span class="o">(</span><span class="nc">Thread</span><span class="o">.</span><span class="na">holdsLock</span><span class="o">(</span><span class="n">mLock</span><span class="o">),</span> <span class="s">"ZygoteProcess lock not held"</span><span class="o">);</span>
+<span class="mi">565</span>
+<span class="mi">566</span>        <span class="k">if</span> <span class="o">(</span><span class="n">primaryZygoteState</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">primaryZygoteState</span><span class="o">.</span><span class="na">isClosed</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">567</span>            <span class="k">try</span> <span class="o">{</span>
+<span class="mi">568</span>                <span class="n">primaryZygoteState</span> <span class="o">=</span> <span class="nc">ZygoteState</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="n">mSocket</span><span class="o">);</span>
+<span class="mi">569</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">IOException</span> <span class="n">ioe</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">570</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="s">"Error connecting to primary zygote"</span><span class="o">,</span> <span class="n">ioe</span><span class="o">);</span>
+<span class="mi">571</span>            <span class="o">}</span>
+<span class="mi">572</span>            <span class="n">maybeSetApiBlacklistExemptions</span><span class="o">(</span><span class="n">primaryZygoteState</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="mi">573</span>            <span class="n">maybeSetHiddenApiAccessLogSampleRate</span><span class="o">(</span><span class="n">primaryZygoteState</span><span class="o">);</span>
+<span class="mi">574</span>        <span class="o">}</span>
+<span class="mi">575</span>        <span class="k">if</span> <span class="o">(</span><span class="n">primaryZygoteState</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="n">abi</span><span class="o">))</span> <span class="o">{</span>
+<span class="mi">576</span>            <span class="k">return</span> <span class="n">primaryZygoteState</span><span class="o">;</span>
+<span class="mi">577</span>        <span class="o">}</span>
+<span class="mi">578</span>
+<span class="mi">579</span>        <span class="c1">// The primary zygote didn't match. Try the secondary.</span>
+<span class="mi">580</span>        <span class="k">if</span> <span class="o">(</span><span class="n">secondaryZygoteState</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">secondaryZygoteState</span><span class="o">.</span><span class="na">isClosed</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">581</span>            <span class="k">try</span> <span class="o">{</span>
+<span class="mi">582</span>                <span class="n">secondaryZygoteState</span> <span class="o">=</span> <span class="nc">ZygoteState</span><span class="o">.</span><span class="na">connect</span><span class="o">(</span><span class="n">mSecondarySocket</span><span class="o">);</span>
+<span class="mi">583</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">IOException</span> <span class="n">ioe</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">584</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="s">"Error connecting to secondary zygote"</span><span class="o">,</span> <span class="n">ioe</span><span class="o">);</span>
+<span class="mi">585</span>            <span class="o">}</span>
+<span class="mi">586</span>            <span class="n">maybeSetApiBlacklistExemptions</span><span class="o">(</span><span class="n">secondaryZygoteState</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="mi">587</span>            <span class="n">maybeSetHiddenApiAccessLogSampleRate</span><span class="o">(</span><span class="n">secondaryZygoteState</span><span class="o">);</span>
+<span class="mi">588</span>        <span class="o">}</span>
+<span class="mi">589</span>
+<span class="mi">590</span>        <span class="k">if</span> <span class="o">(</span><span class="n">secondaryZygoteState</span><span class="o">.</span><span class="na">matches</span><span class="o">(</span><span class="n">abi</span><span class="o">))</span> <span class="o">{</span>
+<span class="mi">591</span>            <span class="k">return</span> <span class="n">secondaryZygoteState</span><span class="o">;</span>
+<span class="mi">592</span>        <span class="o">}</span>
+<span class="mi">593</span>
+<span class="mi">594</span>        <span class="k">throw</span> <span class="k">new</span> <span class="nc">ZygoteStartFailedEx</span><span class="o">(</span><span class="s">"Unsupported zygote ABI: "</span> <span class="o">+</span> <span class="n">abi</span><span class="o">);</span>
+<span class="mi">595</span>    <span class="o">}</span>
+<span class="mi">596</span>
+</code></pre></div></div>
+
+<h4 id="12-在zygote中是怎么创建的">1.2 在zygote中是怎么创建的</h4>
+<p>在前面已经说了, zygot是由init进程创建的，启动起来后会调用ZygoteInit.main方法，创建socket管道<br />
+然后runSelectLoop()，的带客户端发消息来创建进程</p>
+
+<p>这些都在前面的章节中讲过，大致的伪代码</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span> <span class="n">argv</span><span class="o">[])</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="n">runSelectLoop</span><span class="o">(</span><span class="n">abiList</span><span class="o">);</span> <span class="c1">//【见小节5】</span>
+        <span class="o">....</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">MethodAndArgsCaller</span> <span class="n">caller</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">caller</span><span class="o">.</span><span class="na">run</span><span class="o">();</span> <span class="c1">//【见小节16】</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RuntimeException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">closeServerSocket</span><span class="o">();</span>
+        <span class="k">throw</span> <span class="n">ex</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>查看runSelectLoop方法</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Runnable</span> <span class="nf">runSelectLoop</span><span class="o">(</span><span class="nc">String</span> <span class="n">abiList</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">174</span>        <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">FileDescriptor</span><span class="o">&gt;</span> <span class="n">fds</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">FileDescriptor</span><span class="o">&gt;();</span>
+<span class="mi">175</span>        <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">ZygoteConnection</span><span class="o">&gt;</span> <span class="n">peers</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">ZygoteConnection</span><span class="o">&gt;();</span>
+<span class="mi">176</span>
+<span class="mi">177</span>        <span class="n">fds</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">mServerSocket</span><span class="o">.</span><span class="na">getFileDescriptor</span><span class="o">());</span>
+<span class="mi">178</span>        <span class="n">peers</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+<span class="mi">179</span>
+<span class="mi">180</span>        <span class="k">while</span> <span class="o">(</span><span class="kc">true</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">181</span>            <span class="nc">StructPollfd</span><span class="o">[]</span> <span class="n">pollFds</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StructPollfd</span><span class="o">[</span><span class="n">fds</span><span class="o">.</span><span class="na">size</span><span class="o">()];</span>
+<span class="mi">182</span>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">pollFds</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="o">++</span><span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">183</span>                <span class="n">pollFds</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">StructPollfd</span><span class="o">();</span>
+<span class="mi">184</span>                <span class="n">pollFds</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">fd</span> <span class="o">=</span> <span class="n">fds</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">185</span>                <span class="n">pollFds</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">events</span> <span class="o">=</span> <span class="o">(</span><span class="kt">short</span><span class="o">)</span> <span class="no">POLLIN</span><span class="o">;</span>
+<span class="mi">186</span>            <span class="o">}</span>
+<span class="mi">187</span>            <span class="k">try</span> <span class="o">{</span>
+<span class="mi">188</span>                <span class="nc">Os</span><span class="o">.</span><span class="na">poll</span><span class="o">(</span><span class="n">pollFds</span><span class="o">,</span> <span class="o">-</span><span class="mi">1</span><span class="o">);</span>
+<span class="mi">189</span>            <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">ErrnoException</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">190</span>                <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"poll failed"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">191</span>            <span class="o">}</span>
+<span class="mi">192</span>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">pollFds</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">;</span> <span class="o">--</span><span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">193</span>                <span class="k">if</span> <span class="o">((</span><span class="n">pollFds</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">revents</span> <span class="o">&amp;</span> <span class="no">POLLIN</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">194</span>                    <span class="k">continue</span><span class="o">;</span>
+<span class="mi">195</span>                <span class="o">}</span>
+<span class="mi">196</span>
+<span class="mi">197</span>                <span class="k">if</span> <span class="o">(</span><span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                       <span class="c1">//等待远程命令</span>
+<span class="mi">198</span>                    <span class="nc">ZygoteConnection</span> <span class="n">newPeer</span> <span class="o">=</span> <span class="n">acceptCommandPeer</span><span class="o">(</span><span class="n">abiList</span><span class="o">);</span>
+<span class="mi">199</span>                    <span class="n">peers</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">newPeer</span><span class="o">);</span>
+<span class="mi">200</span>                    <span class="n">fds</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">newPeer</span><span class="o">.</span><span class="na">getFileDesciptor</span><span class="o">());</span>
+<span class="mi">201</span>                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+<span class="mi">202</span>                    <span class="k">try</span> <span class="o">{</span>
+<span class="mi">203</span>                        <span class="nc">ZygoteConnection</span> <span class="n">connection</span> <span class="o">=</span> <span class="n">peers</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+                           <span class="c1">//获取到客户端发来的消息,来创建进程，看下面分析</span>
+<span class="mi">204</span>                        <span class="kd">final</span> <span class="nc">Runnable</span> <span class="n">command</span> <span class="o">=</span> <span class="n">connection</span><span class="o">.</span><span class="na">processOneCommand</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="mi">205</span>
+<span class="mi">206</span>                        <span class="k">if</span> <span class="o">(</span><span class="n">mIsForkChild</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">207</span>                            <span class="c1">// We're in the child. We should always have a command to run at this</span>
+<span class="mi">208</span>                            <span class="c1">// stage if processOneCommand hasn't called "exec".</span>
+<span class="mi">209</span>                            <span class="k">if</span> <span class="o">(</span><span class="n">command</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">210</span>                                <span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalStateException</span><span class="o">(</span><span class="s">"command == null"</span><span class="o">);</span>
+<span class="mi">211</span>                            <span class="o">}</span>
+<span class="mi">212</span>
+<span class="mi">213</span>                            <span class="k">return</span> <span class="n">command</span><span class="o">;</span>
+<span class="mi">214</span>                        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+<span class="mi">215</span>                            <span class="c1">// We're in the server - we should never have any commands to run.</span>
+<span class="mi">216</span>                            <span class="k">if</span> <span class="o">(</span><span class="n">command</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">217</span>                                <span class="k">throw</span> <span class="k">new</span> <span class="nc">IllegalStateException</span><span class="o">(</span><span class="s">"command != null"</span><span class="o">);</span>
+<span class="mi">218</span>                            <span class="o">}</span>
+<span class="mi">219</span>
+<span class="mi">220</span>                            <span class="c1">// We don't know whether the remote side of the socket was closed or</span>
+<span class="mi">221</span>                            <span class="c1">// not until we attempt to read from it from processOneCommand. This shows up as</span>
+<span class="mi">222</span>                            <span class="c1">// a regular POLLIN event in our regular processing loop.</span>
+<span class="mi">223</span>                            <span class="k">if</span> <span class="o">(</span><span class="n">connection</span><span class="o">.</span><span class="na">isClosedByPeer</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">224</span>                                <span class="n">connection</span><span class="o">.</span><span class="na">closeSocket</span><span class="o">();</span>
+<span class="mi">225</span>                                <span class="n">peers</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">226</span>                                <span class="n">fds</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">227</span>                            <span class="o">}</span>
+<span class="mi">228</span>                        <span class="o">}</span>
+<span class="mi">229</span>                    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">230</span>                        <span class="k">if</span> <span class="o">(!</span><span class="n">mIsForkChild</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">231</span>                            <span class="c1">// We're in the server so any exception here is one that has taken place</span>
+<span class="mi">232</span>                            <span class="c1">// pre-fork while processing commands or reading / writing from the</span>
+<span class="mi">233</span>                            <span class="c1">// control socket. Make a loud noise about any such exceptions so that</span>
+<span class="mi">234</span>                            <span class="c1">// we know exactly what failed and why.</span>
+<span class="mi">235</span>
+<span class="mi">236</span>                            <span class="nc">Slog</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Exception executing zygote command: "</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+<span class="mi">237</span>
+<span class="mi">238</span>                            <span class="c1">// Make sure the socket is closed so that the other end knows immediately</span>
+<span class="mi">239</span>                            <span class="c1">// that something has gone wrong and doesn't time out waiting for a</span>
+<span class="mi">240</span>                            <span class="c1">// response.</span>
+<span class="mi">241</span>                            <span class="nc">ZygoteConnection</span> <span class="n">conn</span> <span class="o">=</span> <span class="n">peers</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">242</span>                            <span class="n">conn</span><span class="o">.</span><span class="na">closeSocket</span><span class="o">();</span>
+<span class="mi">243</span>
+<span class="mi">244</span>                            <span class="n">fds</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+<span class="mi">245</span>                        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+<span class="mi">246</span>                            <span class="c1">// We're in the child so any exception caught here has happened post</span>
+<span class="mi">247</span>                            <span class="c1">// fork and before we execute ActivityThread.main (or any other main()</span>
+<span class="mi">248</span>                            <span class="c1">// method). Log the details of the exception and bring down the process.</span>
+<span class="mi">249</span>                            <span class="nc">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Caught post-fork exception in child process."</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+<span class="mi">250</span>                            <span class="k">throw</span> <span class="n">e</span><span class="o">;</span>
+<span class="mi">251</span>                        <span class="o">}</span>
+<span class="mi">252</span>                    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+<span class="mi">253</span>                        <span class="c1">// Reset the child flag, in the event that the child process is a child-</span>
+<span class="mi">254</span>                        <span class="c1">// zygote. The flag will not be consulted this loop pass after the Runnable</span>
+<span class="mi">255</span>                        <span class="c1">// is returned.</span>
+<span class="mi">256</span>                        <span class="n">mIsForkChild</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+<span class="mi">257</span>                    <span class="o">}</span>
+<span class="mi">258</span>                <span class="o">}</span>
+<span class="mi">259</span>            <span class="o">}</span>
+<span class="mi">260</span>        <span class="o">}</span>
+<span class="mi">261</span>    <span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>调用ZygoteConnection 类里面的函数</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">Runnable</span> <span class="nf">processOneCommand</span><span class="o">(</span><span class="nc">ZygoteServer</span> <span class="n">zygoteServer</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">124</span>        <span class="nc">String</span> <span class="n">args</span><span class="o">[];</span>
+<span class="mi">125</span>        <span class="o">.....................................................</span>
+<span class="mi">233</span>
+           <span class="c1">//fork进程</span>
+<span class="mi">234</span>        <span class="n">pid</span> <span class="o">=</span> <span class="nc">Zygote</span><span class="o">.</span><span class="na">forkAndSpecialize</span><span class="o">(</span><span class="n">parsedArgs</span><span class="o">.</span><span class="na">uid</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">gid</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">gids</span><span class="o">,</span>
+<span class="mi">235</span>                <span class="n">parsedArgs</span><span class="o">.</span><span class="na">runtimeFlags</span><span class="o">,</span> <span class="n">rlimits</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">mountExternal</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">seInfo</span><span class="o">,</span>
+<span class="mi">236</span>                <span class="n">parsedArgs</span><span class="o">.</span><span class="na">niceName</span><span class="o">,</span> <span class="n">fdsToClose</span><span class="o">,</span> <span class="n">fdsToIgnore</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">startChildZygote</span><span class="o">,</span>
+<span class="mi">237</span>                <span class="n">parsedArgs</span><span class="o">.</span><span class="na">instructionSet</span><span class="o">,</span> <span class="n">parsedArgs</span><span class="o">.</span><span class="na">appDataDir</span><span class="o">);</span>
+<span class="mi">238</span>
+<span class="mi">239</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">240</span>            <span class="k">if</span> <span class="o">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">241</span>                <span class="c1">// in child</span>
+<span class="mi">242</span>                <span class="n">zygoteServer</span><span class="o">.</span><span class="na">setForkChild</span><span class="o">();</span>
+<span class="mi">243</span>
+<span class="mi">244</span>                <span class="n">zygoteServer</span><span class="o">.</span><span class="na">closeServerSocket</span><span class="o">();</span>
+<span class="mi">245</span>                <span class="nc">IoUtils</span><span class="o">.</span><span class="na">closeQuietly</span><span class="o">(</span><span class="n">serverPipeFd</span><span class="o">);</span>
+<span class="mi">246</span>                <span class="n">serverPipeFd</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="mi">247</span>
+<span class="mi">248</span>                <span class="k">return</span> <span class="n">handleChildProc</span><span class="o">(</span><span class="n">parsedArgs</span><span class="o">,</span> <span class="n">descriptors</span><span class="o">,</span> <span class="n">childPipeFd</span><span class="o">,</span>
+<span class="mi">249</span>                        <span class="n">parsedArgs</span><span class="o">.</span><span class="na">startChildZygote</span><span class="o">);</span>
+<span class="mi">250</span>            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+<span class="mi">251</span>                <span class="c1">// In the parent. A pid &lt; 0 indicates a failure and will be handled in</span>
+<span class="mi">252</span>                <span class="c1">// handleParentProc.</span>
+<span class="mi">253</span>                <span class="nc">IoUtils</span><span class="o">.</span><span class="na">closeQuietly</span><span class="o">(</span><span class="n">childPipeFd</span><span class="o">);</span>
+<span class="mi">254</span>                <span class="n">childPipeFd</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+<span class="mi">255</span>                <span class="n">handleParentProc</span><span class="o">(</span><span class="n">pid</span><span class="o">,</span> <span class="n">descriptors</span><span class="o">,</span> <span class="n">serverPipeFd</span><span class="o">);</span>
+<span class="mi">256</span>                <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+<span class="mi">257</span>            <span class="o">}</span>
+<span class="mi">258</span>        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+<span class="mi">259</span>            <span class="nc">IoUtils</span><span class="o">.</span><span class="na">closeQuietly</span><span class="o">(</span><span class="n">childPipeFd</span><span class="o">);</span>
+<span class="mi">260</span>            <span class="nc">IoUtils</span><span class="o">.</span><span class="na">closeQuietly</span><span class="o">(</span><span class="n">serverPipeFd</span><span class="o">);</span>
+<span class="mi">261</span>        <span class="o">}</span>
+<span class="mi">262</span>    <span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>在Zygote.java中</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">forkAndSpecialize</span><span class="o">(</span><span class="kt">int</span> <span class="n">uid</span><span class="o">,</span> <span class="kt">int</span> <span class="n">gid</span><span class="o">,</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">gids</span><span class="o">,</span> <span class="kt">int</span> <span class="n">runtimeFlags</span><span class="o">,</span>
+<span class="mi">134</span>          <span class="kt">int</span><span class="o">[][]</span> <span class="n">rlimits</span><span class="o">,</span> <span class="kt">int</span> <span class="n">mountExternal</span><span class="o">,</span> <span class="nc">String</span> <span class="n">seInfo</span><span class="o">,</span> <span class="nc">String</span> <span class="n">niceName</span><span class="o">,</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">fdsToClose</span><span class="o">,</span>
+<span class="mi">135</span>          <span class="kt">int</span><span class="o">[]</span> <span class="n">fdsToIgnore</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">startChildZygote</span><span class="o">,</span> <span class="nc">String</span> <span class="n">instructionSet</span><span class="o">,</span> <span class="nc">String</span> <span class="n">appDataDir</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">136</span>        <span class="no">VM_HOOKS</span><span class="o">.</span><span class="na">preFork</span><span class="o">();</span>
+<span class="mi">137</span>        <span class="c1">// Resets nice priority for zygote process.</span>
+<span class="mi">138</span>        <span class="n">resetNicePriority</span><span class="o">();</span>
+<span class="mi">139</span>        <span class="kt">int</span> <span class="n">pid</span> <span class="o">=</span> <span class="n">nativeForkAndSpecialize</span><span class="o">(</span>
+<span class="mi">140</span>                  <span class="n">uid</span><span class="o">,</span> <span class="n">gid</span><span class="o">,</span> <span class="n">gids</span><span class="o">,</span> <span class="n">runtimeFlags</span><span class="o">,</span> <span class="n">rlimits</span><span class="o">,</span> <span class="n">mountExternal</span><span class="o">,</span> <span class="n">seInfo</span><span class="o">,</span> <span class="n">niceName</span><span class="o">,</span> <span class="n">fdsToClose</span><span class="o">,</span>
+<span class="mi">141</span>                  <span class="n">fdsToIgnore</span><span class="o">,</span> <span class="n">startChildZygote</span><span class="o">,</span> <span class="n">instructionSet</span><span class="o">,</span> <span class="n">appDataDir</span><span class="o">);</span>
+<span class="mi">142</span>        <span class="c1">// Enable tracing as soon as possible for the child process.</span>
+<span class="mi">143</span>        <span class="k">if</span> <span class="o">(</span><span class="n">pid</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">144</span>            <span class="nc">Trace</span><span class="o">.</span><span class="na">setTracingEnabled</span><span class="o">(</span><span class="kc">true</span><span class="o">,</span> <span class="n">runtimeFlags</span><span class="o">);</span>
+<span class="mi">145</span>
+<span class="mi">146</span>            <span class="c1">// Note that this event ends at the end of handleChildProc,</span>
+<span class="mi">147</span>            <span class="nc">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="nc">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_ACTIVITY_MANAGER</span><span class="o">,</span> <span class="s">"PostFork"</span><span class="o">);</span>
+<span class="mi">148</span>        <span class="o">}</span>
+<span class="mi">149</span>        <span class="no">VM_HOOKS</span><span class="o">.</span><span class="na">postForkCommon</span><span class="o">();</span>
+<span class="mi">150</span>        <span class="k">return</span> <span class="n">pid</span><span class="o">;</span>
+<span class="mi">151</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>查看nativeForkAndSpecialize方法,调用到jni里面的方法com_android_internal_os_Zygote.cpp</p>
+
+<p>public static int nativeForkAndSpecialize() {
+  …………..
+  ForkAndSpecializeCommon();
+  …………..
+}</p>
+:ET

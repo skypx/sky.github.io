@@ -1,0 +1,191 @@
+I"�l<ul id="markdown-toc">
+  <li><a href="#31-main" id="markdown-toc-31-main">3.1 main</a></li>
+  <li><a href="#32-systemserver-run" id="markdown-toc-32-systemserver-run">3.2 SystemServer run</a></li>
+  <li><a href="#33-createsystemcontext" id="markdown-toc-33-createsystemcontext">3.3 createSystemContext</a></li>
+</ul>
+
+<p>源码</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;/</span><span class="n">frameworks</span><span class="o">/</span><span class="n">base</span><span class="o">/</span><span class="n">services</span><span class="o">/</span><span class="n">java</span><span class="o">/</span><span class="n">com</span><span class="o">/</span><span class="n">android</span><span class="o">/</span><span class="n">server</span><span class="o">/</span><span class="nc">SystemServer</span><span class="o">.</span><span class="na">java</span><span class="o">&gt;</span>
+</code></pre></div></div>
+<p>上面的文章中我们知道了怎么通过zygote来启动SystemServer进程，接下来我们来具体分析SystemServer里面的细节</p>
+
+<h6 id="31-main">3.1 main</h6>
+<p>在zygote里面会通过反射来调用到main方法</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="nc">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">294</span>        <span class="k">new</span> <span class="nc">SystemServer</span><span class="o">().</span><span class="na">run</span><span class="o">();</span>
+<span class="mi">295</span>    <span class="o">}</span>
+</code></pre></div></div>
+
+<h6 id="32-systemserver-run">3.2 SystemServer run</h6>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+<span class="mi">308</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">309</span>            <span class="n">traceBeginAndSlog</span><span class="o">(</span><span class="s">"InitBeforeStartServices"</span><span class="o">);</span>
+<span class="mi">310</span>            <span class="c1">// If a device's clock is before 1970 (before 0), a lot of</span>
+<span class="mi">311</span>            <span class="c1">// APIs crash dealing with negative numbers, notably</span>
+<span class="mi">312</span>            <span class="c1">// java.io.File#setLastModified, so instead we fake it and</span>
+<span class="mi">313</span>            <span class="c1">// hope that time from cell towers or NTP fixes it shortly.</span>
+               <span class="err">如果时间比</span><span class="mi">1970</span><span class="err">年早</span><span class="o">,</span> <span class="err">设置为</span><span class="mi">1970</span><span class="err">年</span>
+<span class="mi">314</span>            <span class="k">if</span> <span class="o">(</span><span class="nc">System</span><span class="o">.</span><span class="na">currentTimeMillis</span><span class="o">()</span> <span class="o">&lt;</span> <span class="no">EARLIEST_SUPPORTED_TIME</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">315</span>                <span class="nc">Slog</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"System clock is before 1970; setting to 1970."</span><span class="o">);</span>
+<span class="mi">316</span>                <span class="nc">SystemClock</span><span class="o">.</span><span class="na">setCurrentTimeMillis</span><span class="o">(</span><span class="no">EARLIEST_SUPPORTED_TIME</span><span class="o">);</span>
+<span class="mi">317</span>            <span class="o">}</span>
+<span class="mi">318</span>
+<span class="mi">319</span>            <span class="c1">//</span>
+<span class="mi">320</span>            <span class="c1">// Default the timezone property to GMT if not set.</span>
+<span class="mi">321</span>            <span class="c1">//</span>
+<span class="mi">322</span>            <span class="nc">String</span> <span class="n">timezoneProperty</span> <span class="o">=</span>  <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">"persist.sys.timezone"</span><span class="o">);</span>
+<span class="mi">323</span>            <span class="k">if</span> <span class="o">(</span><span class="n">timezoneProperty</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">timezoneProperty</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">324</span>                <span class="nc">Slog</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Timezone not set; setting to GMT."</span><span class="o">);</span>
+<span class="mi">325</span>                <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.timezone"</span><span class="o">,</span> <span class="s">"GMT"</span><span class="o">);</span>
+<span class="mi">326</span>            <span class="o">}</span>
+<span class="mi">327</span>
+<span class="mi">328</span>            <span class="c1">// If the system has "persist.sys.language" and friends set, replace them with</span>
+<span class="mi">329</span>            <span class="c1">// "persist.sys.locale". Note that the default locale at this point is calculated</span>
+<span class="mi">330</span>            <span class="c1">// using the "-Duser.locale" command line flag. That flag is usually populated by</span>
+<span class="mi">331</span>            <span class="c1">// AndroidRuntime using the same set of system properties, but only the system_server</span>
+<span class="mi">332</span>            <span class="c1">// and system apps are allowed to set them.</span>
+<span class="mi">333</span>            <span class="c1">//</span>
+<span class="mi">334</span>            <span class="c1">// NOTE: Most changes made here will need an equivalent change to</span>
+<span class="mi">335</span>            <span class="c1">// core/jni/AndroidRuntime.cpp</span>
+<span class="mi">336</span>            <span class="k">if</span> <span class="o">(!</span><span class="nc">SystemProperties</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="s">"persist.sys.language"</span><span class="o">).</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">337</span>                <span class="kd">final</span> <span class="nc">String</span> <span class="n">languageTag</span> <span class="o">=</span> <span class="nc">Locale</span><span class="o">.</span><span class="na">getDefault</span><span class="o">().</span><span class="na">toLanguageTag</span><span class="o">();</span>
+<span class="mi">338</span>
+<span class="mi">339</span>                <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.locale"</span><span class="o">,</span> <span class="n">languageTag</span><span class="o">);</span>
+<span class="mi">340</span>                <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.language"</span><span class="o">,</span> <span class="s">""</span><span class="o">);</span>
+<span class="mi">341</span>                <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.country"</span><span class="o">,</span> <span class="s">""</span><span class="o">);</span>
+<span class="mi">342</span>                <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.localevar"</span><span class="o">,</span> <span class="s">""</span><span class="o">);</span>
+<span class="mi">343</span>            <span class="o">}</span>
+<span class="mi">344</span>
+<span class="mi">345</span>            <span class="c1">// The system server should never make non-oneway calls</span>
+<span class="mi">346</span>            <span class="nc">Binder</span><span class="o">.</span><span class="na">setWarnOnBlocking</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">347</span>            <span class="c1">// The system server should always load safe labels</span>
+<span class="mi">348</span>            <span class="nc">PackageItemInfo</span><span class="o">.</span><span class="na">setForceSafeLabels</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">349</span>            <span class="c1">// Deactivate SQLiteCompatibilityWalFlags until settings provider is initialized</span>
+<span class="mi">350</span>            <span class="nc">SQLiteCompatibilityWalFlags</span><span class="o">.</span><span class="na">init</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+<span class="mi">351</span>
+<span class="mi">352</span>            <span class="c1">// Here we go!</span>
+<span class="mi">353</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">i</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Entered the Android system server!"</span><span class="o">);</span>
+<span class="mi">354</span>            <span class="kt">int</span> <span class="n">uptimeMillis</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">SystemClock</span><span class="o">.</span><span class="na">elapsedRealtime</span><span class="o">();</span>
+<span class="mi">355</span>            <span class="nc">EventLog</span><span class="o">.</span><span class="na">writeEvent</span><span class="o">(</span><span class="nc">EventLogTags</span><span class="o">.</span><span class="na">BOOT_PROGRESS_SYSTEM_RUN</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="mi">356</span>            <span class="k">if</span> <span class="o">(!</span><span class="n">mRuntimeRestart</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">357</span>                <span class="nc">MetricsLogger</span><span class="o">.</span><span class="na">histogram</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="s">"boot_system_server_init"</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="mi">358</span>            <span class="o">}</span>
+<span class="mi">359</span>
+<span class="mi">360</span>            <span class="c1">// In case the runtime switched since last boot (such as when</span>
+<span class="mi">361</span>            <span class="c1">// the old runtime was removed in an OTA), set the system</span>
+<span class="mi">362</span>            <span class="c1">// property so that it is in sync. We can | xq oqi't do this in</span>
+<span class="mi">363</span>            <span class="c1">// libnativehelper's JniInvocation::Init code where we already</span>
+<span class="mi">364</span>            <span class="c1">// had to fallback to a different runtime because it is</span>
+<span class="mi">365</span>            <span class="c1">// running as root and we need to be the system user to set</span>
+<span class="mi">366</span>            <span class="c1">// the property. http://b/11463182</span>
+<span class="mi">367</span>            <span class="nc">SystemProperties</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="s">"persist.sys.dalvik.vm.lib.2"</span><span class="o">,</span> <span class="nc">VMRuntime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">vmLibrary</span><span class="o">());</span>
+<span class="mi">368</span>
+<span class="mi">369</span>            <span class="c1">// Mmmmmm... more memory!</span>
+<span class="mi">370</span>            <span class="nc">VMRuntime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">clearGrowthLimit</span><span class="o">();</span>
+<span class="mi">371</span>
+<span class="mi">372</span>            <span class="c1">// The system server has to run all of the time, so it needs to be</span>
+<span class="mi">373</span>            <span class="c1">// as efficient as possible with its memory usage.</span>
+<span class="mi">374</span>            <span class="nc">VMRuntime</span><span class="o">.</span><span class="na">getRuntime</span><span class="o">().</span><span class="na">setTargetHeapUtilization</span><span class="o">(</span><span class="mf">0.8f</span><span class="o">);</span>
+<span class="mi">375</span>
+<span class="mi">376</span>            <span class="c1">// Some devices rely on runtime fingerprint generation, so make sure</span>
+<span class="mi">377</span>            <span class="c1">// we've defined it before booting further.</span>
+<span class="mi">378</span>            <span class="nc">Build</span><span class="o">.</span><span class="na">ensureFingerprintProperty</span><span class="o">();</span>
+<span class="mi">379</span>
+<span class="mi">380</span>            <span class="c1">// Within the system server, it is an error to access Environment paths without</span>
+<span class="mi">381</span>            <span class="c1">// explicitly specifying a user.</span>
+<span class="mi">382</span>            <span class="nc">Environment</span><span class="o">.</span><span class="na">setUserRequired</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">383</span>
+<span class="mi">384</span>            <span class="c1">// Within the system server, any incoming Bundles should be defused</span>
+<span class="mi">385</span>            <span class="c1">// to avoid throwing BadParcelableException.</span>
+<span class="mi">386</span>            <span class="nc">BaseBundle</span><span class="o">.</span><span class="na">setShouldDefuse</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">387</span>
+<span class="mi">388</span>            <span class="c1">// Within the system server, when parceling exceptions, include the stack trace</span>
+<span class="mi">389</span>            <span class="nc">Parcel</span><span class="o">.</span><span class="na">setStackTraceParceling</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">390</span>
+<span class="mi">391</span>            <span class="c1">// Ensure binder calls into the system always run at foreground priority.</span>
+<span class="mi">392</span>            <span class="nc">BinderInternal</span><span class="o">.</span><span class="na">disableBackgroundScheduling</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+<span class="mi">393</span>
+<span class="mi">394</span>            <span class="c1">// Increase the number of binder threads in system_server</span>
+<span class="mi">395</span>            <span class="nc">BinderInternal</span><span class="o">.</span><span class="na">setMaxThreads</span><span class="o">(</span><span class="n">sMaxBinderThreads</span><span class="o">);</span>
+<span class="mi">396</span>
+<span class="mi">397</span>            <span class="c1">// Prepare the main looper thread (this thread).</span>
+<span class="mi">398</span>            <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Process</span><span class="o">.</span><span class="na">setThreadPriority</span><span class="o">(</span>
+<span class="mi">399</span>                <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Process</span><span class="o">.</span><span class="na">THREAD_PRIORITY_FOREGROUND</span><span class="o">);</span>
+<span class="mi">400</span>            <span class="n">android</span><span class="o">.</span><span class="na">os</span><span class="o">.</span><span class="na">Process</span><span class="o">.</span><span class="na">setCanSelfBackground</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+<span class="mi">401</span>            <span class="nc">Looper</span><span class="o">.</span><span class="na">prepareMainLooper</span><span class="o">();</span>
+<span class="mi">402</span>            <span class="nc">Looper</span><span class="o">.</span><span class="na">getMainLooper</span><span class="o">().</span><span class="na">setSlowLogThresholdMs</span><span class="o">(</span>
+<span class="mi">403</span>                    <span class="no">SLOW_DISPATCH_THRESHOLD_MS</span><span class="o">,</span> <span class="no">SLOW_DELIVERY_THRESHOLD_MS</span><span class="o">);</span>
+<span class="mi">404</span>
+<span class="mi">405</span>            <span class="c1">// Initialize native services.</span>
+<span class="mi">406</span>            <span class="nc">System</span><span class="o">.</span><span class="na">loadLibrary</span><span class="o">(</span><span class="s">"android_servers"</span><span class="o">);</span>
+<span class="mi">407</span>
+<span class="mi">408</span>            <span class="c1">// Check whether we failed to shut down last time we tried.</span>
+<span class="mi">409</span>            <span class="c1">// This call may not return.</span>
+<span class="mi">410</span>            <span class="n">performPendingShutdown</span><span class="o">();</span>
+<span class="mi">411</span>
+<span class="mi">412</span>            <span class="c1">// Initialize the system context.</span>
+               <span class="c1">//创建系统的上下文</span>
+<span class="mi">413</span>            <span class="n">createSystemContext</span><span class="o">();</span>
+<span class="mi">414</span>
+<span class="mi">415</span>            <span class="c1">// Create the system service manager.</span>
+               <span class="c1">//系统服务管理者</span>
+<span class="mi">416</span>            <span class="n">mSystemServiceManager</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">SystemServiceManager</span><span class="o">(</span><span class="n">mSystemContext</span><span class="o">);</span>
+<span class="mi">417</span>            <span class="n">mSystemServiceManager</span><span class="o">.</span><span class="na">setStartInfo</span><span class="o">(</span><span class="n">mRuntimeRestart</span><span class="o">,</span>
+<span class="mi">418</span>                    <span class="n">mRuntimeStartElapsedTime</span><span class="o">,</span> <span class="n">mRuntimeStartUptime</span><span class="o">);</span>
+<span class="mi">419</span>            <span class="nc">LocalServices</span><span class="o">.</span><span class="na">addService</span><span class="o">(</span><span class="nc">SystemServiceManager</span><span class="o">.</span><span class="na">class</span><span class="o">,</span> <span class="n">mSystemServiceManager</span><span class="o">);</span>
+<span class="mi">420</span>            <span class="c1">// Prepare the thread pool for init tasks that can be parallelized</span>
+<span class="mi">421</span>            <span class="nc">SystemServerInitThreadPool</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+<span class="mi">422</span>        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+<span class="mi">423</span>            <span class="n">traceEnd</span><span class="o">();</span>  <span class="c1">// InitBeforeStartServices</span>
+<span class="mi">424</span>        <span class="o">}</span>
+<span class="mi">425</span>
+<span class="mi">426</span>        <span class="c1">// Start services.</span>
+<span class="mi">427</span>        <span class="k">try</span> <span class="o">{</span>
+<span class="mi">428</span>            <span class="n">traceBeginAndSlog</span><span class="o">(</span><span class="s">"StartServices"</span><span class="o">);</span>
+<span class="mi">429</span>            <span class="n">startBootstrapServices</span><span class="o">();</span> <span class="c1">// 启动引导服务</span>
+<span class="mi">430</span>            <span class="n">startCoreServices</span><span class="o">();</span> <span class="c1">//核心服务</span>
+<span class="mi">431</span>            <span class="n">startOtherServices</span><span class="o">();</span> <span class="c1">//一些其它的服务</span>
+<span class="mi">432</span>            <span class="nc">SystemServerInitThreadPool</span><span class="o">.</span><span class="na">shutdown</span><span class="o">();</span>
+<span class="mi">433</span>        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Throwable</span> <span class="n">ex</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">434</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="s">"System"</span><span class="o">,</span> <span class="s">"******************************************"</span><span class="o">);</span>
+<span class="mi">435</span>            <span class="nc">Slog</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="s">"System"</span><span class="o">,</span> <span class="s">"************ Failure starting system services"</span><span class="o">,</span> <span class="n">ex</span><span class="o">);</span>
+<span class="mi">436</span>            <span class="k">throw</span> <span class="n">ex</span><span class="o">;</span>
+<span class="mi">437</span>        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+<span class="mi">438</span>            <span class="n">traceEnd</span><span class="o">();</span>
+<span class="mi">439</span>        <span class="o">}</span>
+<span class="mi">440</span>
+<span class="mi">441</span>        <span class="nc">StrictMode</span><span class="o">.</span><span class="na">initVmDefaults</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>
+<span class="mi">442</span>
+<span class="mi">443</span>        <span class="k">if</span> <span class="o">(!</span><span class="n">mRuntimeRestart</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">isFirstBootOrUpgrade</span><span class="o">())</span> <span class="o">{</span>
+<span class="mi">444</span>            <span class="kt">int</span> <span class="n">uptimeMillis</span> <span class="o">=</span> <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">SystemClock</span><span class="o">.</span><span class="na">elapsedRealtime</span><span class="o">();</span>
+<span class="mi">445</span>            <span class="nc">MetricsLogger</span><span class="o">.</span><span class="na">histogram</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="s">"boot_system_server_ready"</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="mi">446</span>            <span class="kd">final</span> <span class="kt">int</span> <span class="no">MAX_UPTIME_MILLIS</span> <span class="o">=</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">1000</span><span class="o">;</span>
+<span class="mi">447</span>            <span class="k">if</span> <span class="o">(</span><span class="n">uptimeMillis</span> <span class="o">&gt;</span> <span class="no">MAX_UPTIME_MILLIS</span><span class="o">)</span> <span class="o">{</span>
+<span class="mi">448</span>                <span class="nc">Slog</span><span class="o">.</span><span class="na">wtf</span><span class="o">(</span><span class="no">SYSTEM_SERVER_TIMING_TAG</span><span class="o">,</span>
+<span class="mi">449</span>                        <span class="s">"SystemServer init took too long. uptimeMillis="</span> <span class="o">+</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="mi">450</span>            <span class="o">}</span>
+<span class="mi">451</span>        <span class="o">}</span>
+<span class="mi">452</span>        <span class="c1">//保证SystemServer进程一直存活</span>
+<span class="mi">453</span>        <span class="c1">// Loop forever.</span>
+<span class="mi">454</span>        <span class="nc">Looper</span><span class="o">.</span><span class="na">loop</span><span class="o">();</span>
+<span class="mi">455</span>        <span class="k">throw</span> <span class="k">new</span> <span class="nc">RuntimeException</span><span class="o">(</span><span class="s">"Main thread loop unexpectedly exited"</span><span class="o">);</span>
+<span class="mi">456</span>    <span class="o">}</span>
+</code></pre></div></div>
+<h6 id="33-createsystemcontext">3.3 createSystemContext</h6>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">createSystemContext</span><span class="o">()</span> <span class="o">{</span>
+           <span class="c1">//创建ActivityThread, 在systemMain函数里面调用ActivityThread的构造函数</span>
+           <span class="c1">//ActivityThread thread = new ActivityThread();</span>
+<span class="mi">522</span>        <span class="nc">ActivityThread</span> <span class="n">activityThread</span> <span class="o">=</span> <span class="nc">ActivityThread</span><span class="o">.</span><span class="na">systemMain</span><span class="o">();</span>
+<span class="mi">523</span>        <span class="n">mSystemContext</span> <span class="o">=</span> <span class="n">activityThread</span><span class="o">.</span><span class="na">getSystemContext</span><span class="o">();</span>
+<span class="mi">524</span>        <span class="n">mSystemContext</span><span class="o">.</span><span class="na">setTheme</span><span class="o">(</span><span class="no">DEFAULT_SYSTEM_THEME</span><span class="o">);</span>
+<span class="mi">525</span>
+<span class="mi">526</span>        <span class="kd">final</span> <span class="nc">Context</span> <span class="n">systemUiContext</span> <span class="o">=</span> <span class="n">activityThread</span><span class="o">.</span><span class="na">getSystemUiContext</span><span class="o">();</span>
+<span class="mi">527</span>        <span class="n">systemUiContext</span><span class="o">.</span><span class="na">setTheme</span><span class="o">(</span><span class="no">DEFAULT_SYSTEM_THEME</span><span class="o">);</span>
+<span class="mi">528</span>    <span class="o">}</span>
+<span class="mi">529</span>
+</code></pre></div></div>
+<p>当然在SystemServer里面启动了好多的java层的service，他们内部通过binder 来进行通信，这个地方就暂时不说了<br />
+以后会专门开一篇来说SystemServer里面启动的服务，以及怎么通过binder来进行通信的。到这个地方我们的SystemServer<br />
+算是启动完成了，那下面是怎么启动到launcher呢，继续看下一篇文章。</p>
+:ET

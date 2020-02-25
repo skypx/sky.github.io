@@ -1,0 +1,261 @@
+I"�`<ul id="markdown-toc">
+  <li><a href="#什么是v4l2这篇文章只是针对android设备" id="markdown-toc-什么是v4l2这篇文章只是针对android设备">什么是V4L2(这篇文章只是针对Android设备)</a></li>
+  <li><a href="#怎么用呢" id="markdown-toc-怎么用呢">怎么用呢?</a></li>
+</ul>
+
+<blockquote>
+  <p>最近在做视频采集方面的工作, 对V4L2稍微研究了下，写下一些自己的心得和体会，同时做一下总结,
+如果有那方面写错的话请多多指教</p>
+</blockquote>
+
+<h5 id="什么是v4l2这篇文章只是针对android设备">什么是V4L2(这篇文章只是针对Android设备)</h5>
+<p>我们都知道硬件千千万万,比如有A厂家的摄像头，B厂家的摄像头,那对应得就有A厂家摄像头驱动，B厂家<br />
+摄像头的驱动，那HAL就得通过A厂家驱动获取数据，B厂家驱动获取数据.那有无数厂家了？所以就抽象出<br />
+来了一套驱动框架，不管你那个厂家的我摄像头，上面只用调接口，通过驱动框架来获取数据.</p>
+
+<p>官方解释:</p>
+
+<p><a href="https://en.wikipedia.org/wiki/Video4Linux">V4L2</a></p>
+
+<p>下面的是总结的白话:
+Video4Linux2是Linux内核中关于视频设备的内核驱动框架，为上层的访问底层的视频设备提供了统一的接口。<br />
+凡是内核中的子系统都有抽象底层硬件的差异，为上层提供统一的接口和提取出公共代码避免代码冗余等好处。<br />
+就像公司的老板一般都不会直接找底层的员工谈话，而是找部门经理了解情况，一个是因为底层屌丝人数多，<br />
+意见各有不同，措辞也不准，部门经理会把情况汇总后再向上汇报；二个是老板时间宝贵。</p>
+
+<p>camera中运用的框架是是这样的:
+位于HAL下层, 以后我会分析v4l2在HAL层的运用获取数据</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/v4l2/camerapic.jpg" alt="avatar" /></p>
+
+<p>至此我们大概明白了V4L2大概是做什么的.</p>
+
+<h5 id="怎么用呢">怎么用呢?</h5>
+<p>思考:: 假如我不通过V4L2那么我怎么获取camera数据，并且把数据保存下来，视频应该获取不了，因为<br />
+视频会在HAL里面把一帧一帧数据传送给codec，然后经过编解码，才生成视频，我们通过V4l2能获取到<br />
+一帧一帧数据,并且保存为图片，其实HAL的数据就是通过v4l2拿到原始数据的，然后HAL层在经过算法<br />
+等的处理，返回给cameraservice,然后返回给App，App在去保存。所以就生成了图片</p>
+
+<p>一个大致的流程类似这样的
+<img src="https://github.com/skypx/BlogResource/raw/master/v4l2/v4l2.jpg" alt="avatar" /></p>
+
+<ol>
+  <li>open device
+去open 驱动节点的位置, 因为会v4l2的驱动节点会挂载在<strong>/dev/video0</strong>下面
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">fd</span> <span class="o">=</span> <span class="n">open</span><span class="o">(</span><span class="n">deviceName</span><span class="o">,</span> <span class="no">O_RDWR</span> <span class="o">|</span> <span class="no">O_NONBLOCK</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>init_device
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">struct</span> <span class="n">v4l2_capability</span> <span class="n">cap</span><span class="o">;</span> <span class="c1">//这个设备的功能，比如是否是视频输入设备</span>
+ <span class="n">struct</span> <span class="n">v4l2_cropcap</span> <span class="n">cropcap</span><span class="o">;</span> <span class="c1">//裁剪能力</span>
+ <span class="n">struct</span> <span class="n">v4l2_crop</span> <span class="n">crop</span><span class="o">;</span> <span class="c1">// 裁剪</span>
+ <span class="n">struct</span> <span class="n">v4l2_format</span> <span class="n">fmt</span><span class="o">;</span>  <span class="c1">// 设置视频捕获格式</span>
+ <span class="n">struct</span> <span class="n">v4l2_input</span> <span class="n">input</span><span class="o">;</span> <span class="c1">//视频输入</span>
+
+ <span class="err">一些参数的意思</span>
+ <span class="c1">// VIDIOC_REQBUFS：分配内存</span>
+ <span class="c1">// VIDIOC_QUERYBUF：把VIDIOC_REQBUFS中分配的数据缓存转换成物理地址</span>
+ <span class="c1">// VIDIOC_QUERYCAP：查询驱动功能</span>
+ <span class="c1">// VIDIOC_ENUM_FMT：获取当前驱动支持的视频格式</span>
+ <span class="c1">// VIDIOC_S_FMT：设置当前驱动的频捕获格式</span>
+ <span class="c1">// VIDIOC_G_FMT：读取当前驱动的频捕获格式</span>
+ <span class="c1">// VIDIOC_TRY_FMT：验证当前驱动的显示格式</span>
+ <span class="c1">// VIDIOC_CROPCAP：查询驱动的修剪能力</span>
+ <span class="c1">// VIDIOC_S_CROP：设置视频信号的边框</span>
+ <span class="c1">// VIDIOC_G_CROP：读取视频信号的边框</span>
+ <span class="c1">// VIDIOC_QBUF：把数据从缓存中读取出来</span>
+ <span class="c1">// VIDIOC_DQBUF：把数据放回缓存队列</span>
+ <span class="c1">// VIDIOC_STREAMON：开始视频显示函数</span>
+ <span class="c1">// VIDIOC_STREAMOFF：结束视频显示函数</span>
+ <span class="c1">// VIDIOC_QUERYSTD：检查当前视频设备支持的标准，例如PAL或NTSC。</span>
+
+ <span class="c1">//查询能力</span>
+ <span class="k">if</span> <span class="o">(-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">px_ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_QUERYCAP</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">cap</span><span class="o">)){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_QUERYCAP ERROR  "</span><span class="o">);</span>
+ <span class="o">}</span>
+
+ <span class="k">if</span> <span class="o">(!(</span><span class="n">cap</span><span class="o">.</span><span class="na">capabilities</span> <span class="o">&amp;</span> <span class="no">V4L2_CAP_VIDEO_CAPTURE</span><span class="o">)){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"can't capture for V4L2_CAP_VIDEO_CAPTURE"</span><span class="o">);</span>
+ <span class="o">}</span>
+
+ <span class="k">if</span> <span class="o">(!(</span><span class="n">cap</span><span class="o">.</span><span class="na">capabilities</span> <span class="o">&amp;</span> <span class="no">V4L2_CAP_STREAMING</span><span class="o">))</span> <span class="o">{</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"V4L2_CAP_STREAMING error"</span><span class="o">);</span>
+ <span class="o">}</span>
+
+ <span class="c1">//把结构体所占的内存全部初始化为0, 方便以后的赋值操作</span>
+ <span class="c1">//这个地方可以定义一个宏函数暂时先这样</span>
+ <span class="n">memset</span><span class="o">(&amp;</span><span class="n">input</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_input</span><span class="o">));</span>
+ <span class="n">memset</span><span class="o">(&amp;</span><span class="n">cropcap</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_cropcap</span><span class="o">));</span>
+ <span class="n">memset</span><span class="o">(&amp;</span><span class="n">fmt</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_format</span><span class="o">));</span>
+
+ <span class="n">fmt</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span>
+ <span class="n">fmt</span><span class="o">.</span><span class="na">fmt</span><span class="o">.</span><span class="na">pix</span><span class="o">.</span><span class="na">width</span>       <span class="o">=</span> <span class="n">cap_rect</span><span class="o">.</span><span class="na">width</span><span class="o">;</span>
+ <span class="n">fmt</span><span class="o">.</span><span class="na">fmt</span><span class="o">.</span><span class="na">pix</span><span class="o">.</span><span class="na">height</span>      <span class="o">=</span> <span class="n">cap_rect</span><span class="o">.</span><span class="na">height</span><span class="o">;</span>
+ <span class="n">fmt</span><span class="o">.</span><span class="na">fmt</span><span class="o">.</span><span class="na">pix</span><span class="o">.</span><span class="na">pixelformat</span> <span class="o">=</span> <span class="no">CAPTURE_PIXELFORMAT</span><span class="o">;</span>
+ <span class="n">fmt</span><span class="o">.</span><span class="na">fmt</span><span class="o">.</span><span class="na">pix</span><span class="o">.</span><span class="na">field</span> <span class="o">=</span> <span class="no">V4L2_FIELD_INTERLACED_BT</span><span class="o">;</span>
+
+ <span class="c1">//设置图像的格式</span>
+ <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_TRY_FMT</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">fmt</span><span class="o">);</span>
+ <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_TRY_FMT error"</span><span class="o">);</span>
+ <span class="o">}</span>
+
+ <span class="n">result</span> <span class="o">=</span> <span class="n">ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_S_FMT</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">fmt</span><span class="o">);</span>
+
+ <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_S_FMT error"</span><span class="o">);</span>
+ <span class="o">}</span>
+
+ <span class="n">memset</span><span class="o">(&amp;</span><span class="n">crop</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_crop</span><span class="o">));</span>
+ <span class="n">crop</span><span class="o">.</span><span class="na">type</span>     <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span>
+ <span class="n">crop</span><span class="o">.</span><span class="na">c</span><span class="o">.</span><span class="na">left</span>   <span class="o">=</span> <span class="n">cropcap</span><span class="o">.</span><span class="na">defrect</span><span class="o">.</span><span class="na">left</span><span class="o">;</span>
+ <span class="n">crop</span><span class="o">.</span><span class="na">c</span><span class="o">.</span><span class="na">top</span>    <span class="o">=</span> <span class="n">cropcap</span><span class="o">.</span><span class="na">defrect</span><span class="o">.</span><span class="na">top</span><span class="o">;</span>
+ <span class="n">crop</span><span class="o">.</span><span class="na">c</span><span class="o">.</span><span class="na">width</span>  <span class="o">=</span> <span class="n">cropcap</span><span class="o">.</span><span class="na">defrect</span><span class="o">.</span><span class="na">width</span><span class="o">;</span>
+ <span class="n">crop</span><span class="o">.</span><span class="na">c</span><span class="o">.</span><span class="na">height</span> <span class="o">=</span> <span class="n">cropcap</span><span class="o">.</span><span class="na">defrect</span><span class="o">.</span><span class="na">height</span><span class="o">;</span>
+
+ <span class="n">result</span> <span class="o">=</span> <span class="n">ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_S_CROP</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">crop</span><span class="o">);</span>
+ <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_S_CROP error"</span><span class="o">);</span>
+ <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>init_userptr
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="no">SLOGD</span><span class="o">(</span><span class="s">"sky init userptr"</span><span class="o">);</span>
+ <span class="kt">int</span> <span class="n">result</span><span class="o">;</span>
+ <span class="n">struct</span> <span class="n">v4l2_requestbuffers</span> <span class="n">req</span><span class="o">;</span>
+ <span class="n">memset</span><span class="o">(&amp;</span><span class="n">req</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_requestbuffers</span><span class="o">));</span>
+
+ <span class="n">req</span><span class="o">.</span><span class="na">count</span> <span class="o">=</span> <span class="no">USE_BUF_COUNT</span><span class="o">;</span> <span class="c1">// buffer size if 4</span>
+ <span class="n">req</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span> <span class="c1">// video capture type</span>
+ <span class="n">req</span><span class="o">.</span><span class="na">memory</span> <span class="o">=</span> <span class="no">V4L2_MEMORY_MMAP</span><span class="o">;</span> <span class="c1">//mmap 方式</span>
+
+ <span class="n">result</span> <span class="o">=</span> <span class="n">px_ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_REQBUFS</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">req</span><span class="o">);</span> <span class="c1">//申请空间</span>
+
+ <span class="k">if</span> <span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">count</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="o">)</span> <span class="o">{</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"insufficient buf memory\n"</span><span class="o">);</span> <span class="c1">//不足的</span>
+ <span class="o">}</span>
+
+ <span class="k">if</span> <span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">count</span> <span class="o">&gt;</span> <span class="no">USE_BUF_COUNT</span><span class="o">){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"request buf memory\n"</span><span class="o">);</span> <span class="c1">//申请error</span>
+ <span class="o">}</span>
+
+ <span class="n">buffers</span> <span class="o">=</span> <span class="o">(</span><span class="n">struct</span> <span class="n">buffer</span><span class="o">*)</span><span class="n">calloc</span><span class="o">(</span><span class="n">req</span><span class="o">.</span><span class="na">count</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(*</span><span class="n">buffers</span><span class="o">));</span>
+
+ <span class="k">for</span> <span class="o">(</span><span class="n">n_buffers</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">n_buffers</span> <span class="o">&lt;</span> <span class="n">req</span><span class="o">.</span><span class="na">count</span><span class="o">;</span> <span class="n">n_buffers</span><span class="o">++)</span>
+ <span class="o">{</span>
+     <span class="n">struct</span> <span class="n">v4l2_buffer</span> <span class="n">buf</span><span class="o">;</span>
+     <span class="c1">//clear buffer</span>
+     <span class="n">memset</span><span class="o">(&amp;</span><span class="n">buf</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">struct</span> <span class="n">v4l2_buffer</span><span class="o">));</span>
+
+     <span class="n">buf</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span>
+     <span class="n">buf</span><span class="o">.</span><span class="na">memory</span> <span class="o">=</span> <span class="no">V4L2_MEMORY_MMAP</span><span class="o">;</span>
+     <span class="n">buf</span><span class="o">.</span><span class="na">index</span>  <span class="o">=</span> <span class="n">n_buffers</span><span class="o">;</span>
+
+     <span class="c1">//查询分配的buffer信息</span>
+     <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">px_ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_QUERYBUF</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="o">);</span>
+     <span class="k">if</span> <span class="o">(-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">result</span><span class="o">)</span>
+     <span class="o">{</span>
+         <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_QUERYBUF error"</span><span class="o">);</span>
+     <span class="o">}</span>
+
+     <span class="c1">//void *mmap(void *start, size_t length, int prot, int flags,</span>
+     <span class="c1">//int fd, off_t offset);</span>
+     <span class="c1">//start:: 映射区的开始地址</span>
+     <span class="c1">//length:: 映射区的长度</span>
+     <span class="c1">//prot :: 期望的内存保护标志，不能与文件的打开模式冲突</span>
+     <span class="c1">//flags:: 指定映射类型</span>
+     <span class="c1">//offset：被映射对象内容的起点。</span>
+
+     <span class="n">buffers</span><span class="o">[</span><span class="n">n_buffers</span><span class="o">].</span><span class="na">length</span> <span class="o">=</span> <span class="n">buf</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+     <span class="n">buffers</span><span class="o">[</span><span class="n">n_buffers</span><span class="o">].</span><span class="na">start</span> <span class="o">=</span>
+     <span class="n">mmap</span><span class="o">(</span><span class="no">NULL</span><span class="o">,</span> <span class="n">buf</span><span class="o">.</span><span class="na">length</span><span class="o">,</span> <span class="no">PROT_READ</span> <span class="o">|</span> <span class="no">PROT_WRITE</span><span class="o">,</span> <span class="no">MAP_SHARED</span><span class="o">,</span> <span class="n">fd</span><span class="o">,</span> <span class="n">buf</span><span class="o">.</span><span class="na">m</span><span class="o">.</span><span class="na">offset</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>start_capturing VIDIOC_STREAMON 代表开始获取图片流
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="no">SLOGD</span><span class="o">(</span><span class="s">"sky start capturing"</span><span class="o">);</span>
+ <span class="kd">enum</span> <span class="n">v4l2_buf_type</span> <span class="n">type</span><span class="o">;</span>
+ <span class="kt">int</span> <span class="n">result</span><span class="o">;</span>
+ <span class="c1">//n_buffers 在初始化buffer的时候已经自动+1了</span>
+ <span class="k">for</span> <span class="o">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n_buffers</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
+     <span class="n">struct</span> <span class="n">v4l2_buffer</span> <span class="n">buf</span><span class="o">;</span>
+     <span class="n">memset</span><span class="o">(&amp;</span><span class="n">buf</span><span class="o">,</span> <span class="mh">0x00</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">buf</span><span class="o">));</span>
+     <span class="n">buf</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span>
+     <span class="n">buf</span><span class="o">.</span><span class="na">memory</span> <span class="o">=</span> <span class="no">V4L2_MEMORY_MMAP</span><span class="o">;</span>
+     <span class="n">buf</span><span class="o">.</span><span class="na">index</span> <span class="o">=</span> <span class="n">i</span><span class="o">;</span>
+     <span class="c1">//VIDIOC_QBUF 把buffer放入放进输入队列，等待填充数据</span>
+     <span class="n">result</span> <span class="o">=</span> <span class="n">px_ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_QBUF</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">buf</span><span class="o">);</span>
+     <span class="k">if</span> <span class="o">(-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">result</span><span class="o">){</span>
+         <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_QBUF error"</span><span class="o">);</span>
+         <span class="k">return</span><span class="o">;</span>
+     <span class="o">}</span>
+ <span class="o">}</span>
+ <span class="n">type</span> <span class="o">=</span> <span class="no">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="o">;</span>
+ <span class="c1">//开始</span>
+ <span class="n">result</span> <span class="o">=</span> <span class="n">px_ioctrl</span><span class="o">(</span><span class="n">fd</span><span class="o">,</span> <span class="no">VIDIOC_STREAMON</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">type</span><span class="o">);</span>
+ <span class="k">if</span> <span class="o">(-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">result</span><span class="o">){</span>
+     <span class="no">SKY_LOG</span><span class="o">(</span><span class="s">"VIDIOC_STREAMON error"</span><span class="o">);</span>
+ <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>不断的loop查询
+```java
+void mainloop()
+{
+ SLOGD(“sky start main loop”);
+ unsigned int count;
+ count = MAX_FRAME_COUNT;  //获取200帧数据</p>
+
+    <p>while (count – &gt;0)
+ {
+     for (;;) {
+         fd_set fds;
+         struct timeval tv;
+         int r;</p>
+
+    <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>     FD_ZERO(&amp;fds);
+     FD_SET(fd, &amp;fds);
+
+     tv.tv_sec = 2;
+     tv.tv_usec = 0;
+
+     //检测摄像头是否有数据可以读取
+     //select 和 poll 来对文件描述符进行监听是否有数据可读。
+     r = select(fd+1, &amp;fds, NULL, NULL, &amp;tv);
+
+     if (-1 == r) {
+         if (EINTR == errno)
+             continue;
+         SKY_LOG("system error");
+     }
+
+     if (0 == r) {
+         SKY_LOG("select time out");
+     }
+
+     read_frame();
+
+
+ }
+</code></pre></div>    </div>
+
+    <p>}</p>
+  </li>
+</ol>
+
+<p>}</p>
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>6.关掉设备
+```java
+void close_device()
+{
+    SLOGD("sky close device");
+    int close_id = close(fd);
+
+    if (-1 ==  close_id){
+        SKY_LOG("close error");
+    }
+}
+</code></pre></div></div>
+<p><a href="https://github.com/skypx/v4l2AndDrm">Github地址</a></p>
+:ET

@@ -1,0 +1,35 @@
+I"�
+<blockquote>
+  <p>在Linux 或者 Mac系统中如何快速搜索已经使用过的命令?</p>
+</blockquote>
+
+<ul>
+  <li>
+    <p>在Linux中我们可以用history查询已经使用过的命令</p>
+  </li>
+  <li>
+    <p>并且还可以用 Ctrl + R 来搜索已经用过的命令</p>
+  </li>
+  <li>
+    <p>我们用一种更快的方式来搜索, 你忘记了以前输入过的某个命令, 只记得开头的几个字母, 没关系
+ 下面我们看看怎么快速补全</p>
+  </li>
+</ul>
+
+<ol>
+  <li>进入你的用户目录下.建立.inputrc文件</li>
+  <li>
+    <p>输入以下内容</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="s">"\e[A"</span><span class="o">:</span> <span class="n">history</span><span class="o">-</span><span class="n">search</span><span class="o">-</span><span class="n">backward</span>
+ <span class="s">"\e[B"</span><span class="o">:</span> <span class="n">history</span><span class="o">-</span><span class="n">search</span><span class="o">-</span><span class="n">forward</span>
+ <span class="n">set</span> <span class="n">show</span><span class="o">-</span><span class="n">all</span><span class="o">-</span><span class="k">if</span><span class="o">-</span><span class="n">ambiguous</span> <span class="n">on</span>
+ <span class="n">set</span> <span class="n">completion</span><span class="o">-</span><span class="n">ignore</span><span class="o">-</span><span class="k">case</span> <span class="n">on</span>
+</code></pre></div>    </div>
+  </li>
+  <li>保存, 执行 bind -f .inputrc</li>
+</ol>
+
+<p>然后你随便输入几个命令. ls, pwd, cd, ….
+这个时候想输入pwd, 只用输入p 然后按键盘上键, 命令自动补充完毕. 大大提升工作效率!!</p>
+:ET

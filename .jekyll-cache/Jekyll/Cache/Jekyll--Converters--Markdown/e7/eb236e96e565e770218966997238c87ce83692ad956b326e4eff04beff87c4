@@ -1,0 +1,77 @@
+I"�<ul id="markdown-toc">
+  <li><a href="#前言" id="markdown-toc-前言">前言</a></li>
+  <li><a href="#java层的log" id="markdown-toc-java层的log">Java层的Log</a></li>
+  <li><a href="#native层的log-一般jni就是通过这种方式调用的" id="markdown-toc-native层的log-一般jni就是通过这种方式调用的">Native层的Log, 一般JNI就是通过这种方式调用的</a>    <ul>
+      <li><a href="#__android_log_print方式" id="markdown-toc-__android_log_print方式">__android_log_print方式</a></li>
+      <li><a href="#slogd的方式" id="markdown-toc-slogd的方式">SLOGD的方式</a></li>
+      <li><a href="#aloge的方式" id="markdown-toc-aloge的方式">ALOGE的方式</a></li>
+    </ul>
+  </li>
+</ul>
+
+<blockquote>
+  <p>Android系统中的log都有那些，如何在JNI或者自己在Android系统下开发的程序中打印Log</p>
+</blockquote>
+
+<h3 id="前言">前言</h3>
+
+<p>Android 系统中的Log分为两类，一种是java层的， 一种是Native层的，</p>
+
+<h2 id="java层的log">Java层的Log</h2>
+
+<p><strong>Log.d</strong><br />
+<strong>Log.e</strong><br />
+<strong>Log.v</strong><br />
+<strong>Log.i</strong></p>
+
+<p>在此不做过多赘述, 最终还是通过jni调到系统的</p>
+
+<h2 id="native层的log-一般jni就是通过这种方式调用的">Native层的Log, 一般JNI就是通过这种方式调用的</h2>
+
+<h3 id="__android_log_print方式">__android_log_print方式</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">1</span><span class="o">.</span><span class="err">源码位置</span><span class="o">,</span><span class="err">系统编译出</span><span class="n">liblog</span><span class="err">库</span>
+<span class="o">/</span><span class="n">system</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">liblog</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">android</span><span class="o">/</span><span class="n">log</span><span class="o">.</span><span class="na">h</span>
+
+<span class="mi">2</span><span class="o">.</span><span class="err">在</span><span class="n">mk</span><span class="err">文件里面引用这个库文件</span>
+<span class="no">LOCAL_SHARED_LIBRARIES</span> <span class="o">:=</span> <span class="err">\</span>
+	<span class="n">liblog</span>
+
+<span class="mi">3</span><span class="o">.</span><span class="err">在</span><span class="n">c</span><span class="err">或者</span><span class="n">c</span><span class="o">++</span><span class="err">代码中引用</span> <span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">android</span><span class="o">/</span><span class="n">log</span><span class="o">.</span><span class="na">h</span><span class="o">&gt;</span>
+
+<span class="no">ANDROID_LOG_DEBUG</span> <span class="n">log</span><span class="o">.</span><span class="na">h</span><span class="err">文件里面定义的枚举，可以直接用</span><span class="o">,</span>
+<span class="n">__android_log_print</span><span class="o">(</span><span class="no">ANDROID_LOG_ERROR</span><span class="o">,</span> <span class="no">LOG_TAG</span><span class="o">,</span> <span class="n">__VA_ARGS__</span><span class="o">)</span>
+<span class="n">__VA_ARGS__</span>  <span class="err">这个是可变参数接收的类型</span>
+
+<span class="n">__android_log_print</span><span class="o">(</span><span class="no">ANDROID_LOG_DEBUG</span><span class="o">,</span> <span class="s">"skyxiao"</span><span class="o">,</span> <span class="s">"test"</span><span class="o">);</span>
+<span class="err">一般定义一个宏来表示可变参数，这个可以自己上网搜下，很简单的</span>
+</code></pre></div></div>
+
+<h3 id="slogd的方式">SLOGD的方式</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mi">1</span><span class="o">.</span><span class="err">源码位置</span><span class="o">,</span><span class="err">系统编译出</span><span class="n">libcutils</span><span class="err">库文件</span>
+<span class="o">/</span><span class="n">system</span><span class="o">/</span><span class="n">core</span><span class="o">/</span><span class="n">include</span><span class="o">/</span><span class="n">log</span><span class="o">/</span><span class="n">log_system</span><span class="o">.</span><span class="na">h</span>
+<span class="mi">2</span><span class="o">.</span><span class="err">引入头文件</span>
+<span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">cutils</span><span class="o">/</span><span class="n">log</span><span class="o">.</span><span class="na">h</span><span class="o">&gt;</span>
+<span class="mi">3</span><span class="o">.</span><span class="na">SLOGD</span><span class="o">(</span><span class="s">"xxxxx"</span><span class="o">);</span>
+</code></pre></div></div>
+
+<h3 id="aloge的方式">ALOGE的方式</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="err">定义宏</span>
+<span class="err">#</span><span class="n">define</span> <span class="no">LOG_TAG</span> <span class="s">"test"</span>
+<span class="err">为什么要这样定义？</span>
+<span class="err">参考源码</span><span class="o">:</span><span class="err">第二个参数是</span><span class="no">LOG_TAG</span> <span class="err">也可以不用定义</span>
+<span class="err">#</span><span class="n">ifndef</span> <span class="no">ALOGE</span>
+<span class="mi">242</span><span class="err">#</span><span class="n">define</span> <span class="nf">ALOGE</span><span class="o">(...)</span> <span class="o">((</span><span class="kt">void</span><span class="o">)</span><span class="no">ALOG</span><span class="o">(</span><span class="no">LOG_ERROR</span><span class="o">,</span> <span class="no">LOG_TAG</span><span class="o">,</span> <span class="n">__VA_ARGS__</span><span class="o">))</span>
+
+<span class="err">####</span> <span class="err">第一种方式</span><span class="o">:</span>
+<span class="err">上面的两种方式引入的库和头文件之后，可以直接用</span>
+<span class="no">ALOGE</span><span class="o">(</span><span class="s">"xxxxx"</span><span class="o">);</span>
+<span class="err">####</span> <span class="err">第二种方式</span><span class="o">:</span>
+<span class="err">#</span><span class="n">include</span> <span class="o">&lt;</span><span class="n">utils</span><span class="o">/</span><span class="nc">Log</span><span class="o">.</span><span class="na">h</span><span class="o">&gt;</span>
+<span class="n">mk</span><span class="err">中添加</span>
+<span class="nl">LOCAL_SHARED_LIBRARIES:</span><span class="o">=</span> <span class="n">libcutils</span> <span class="n">libutils</span> <span class="n">liblog</span>
+<span class="nf">ALOGE</span><span class="o">(</span><span class="s">"xxxxx"</span><span class="o">);</span>
+<span class="no">ALOGE</span><span class="o">(</span><span class="err">“</span><span class="o">%</span><span class="n">s</span><span class="o">(),</span> <span class="o">%</span><span class="n">d</span><span class="err">”</span><span class="o">,</span><span class="n">__FUNCTION__</span><span class="o">,</span><span class="n">__LINE__</span><span class="o">);</span>
+<span class="err">可参考这个链接</span>
+<span class="o">&lt;</span><span class="nl">https:</span><span class="c1">//blog.csdn.net/u010164190/article/details/78659503&gt;</span>
+</code></pre></div></div>
+:ET

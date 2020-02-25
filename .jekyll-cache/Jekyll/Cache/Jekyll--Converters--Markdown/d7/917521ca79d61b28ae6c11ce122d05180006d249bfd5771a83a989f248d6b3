@@ -1,0 +1,513 @@
+I"��<ul id="markdown-toc">
+  <li><a href="#scrollto与scrollby的区别" id="markdown-toc-scrollto与scrollby的区别">scrollTo与scrollBy的区别</a></li>
+</ul>
+
+<blockquote>
+  <p>详解Android 中的ScrollTo, ScrollBy方法</p>
+</blockquote>
+
+<ol>
+  <li>首先看一下网上的一些答案以及说法:
+scrollTo(-x,-y), scrollBy(-x,-y), 如果传入负值就向正方向移动,传入正值向负方向移动
+还有说移动的是里面的内容, 为什么会这样呢.
+总结一句话就是,移动的方向和你传入的正负数相反的方向. 可有没有想过为什么会这样? 本篇将解释为什么会这样. 下面的一些图片更直观的</li>
+</ol>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/view/scrool1.png" alt="avatar" />
+<img src="https://github.com/skypx/BlogResource/raw/master/view/scrool2.png" alt="avatar" />
+<img src="https://github.com/skypx/BlogResource/raw/master/view/scrool3.png" alt="avatar" />
+<img src="https://github.com/skypx/BlogResource/raw/master/view/scrool4.png" alt="avatar" /></p>
+
+<blockquote>
+  <p>源码分析</p>
+</blockquote>
+
+<ol>
+  <li>scrollTo, scrollBy 源码</li>
+</ol>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+     * Set the scrolled position of your view. This will cause a call to
+     * {@link #onScrollChanged(int, int, int, int)} and the view will be
+     * invalidated.
+     * @param x the x position to scroll to
+     * @param y the y position to scroll to
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">scrollTo</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mScrollX</span> <span class="o">!=</span> <span class="n">x</span> <span class="o">||</span> <span class="n">mScrollY</span> <span class="o">!=</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">oldX</span> <span class="o">=</span> <span class="n">mScrollX</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">oldY</span> <span class="o">=</span> <span class="n">mScrollY</span><span class="o">;</span>
+            <span class="n">mScrollX</span> <span class="o">=</span> <span class="n">x</span><span class="o">;</span>
+            <span class="n">mScrollY</span> <span class="o">=</span> <span class="n">y</span><span class="o">;</span>
+            <span class="n">invalidateParentCaches</span><span class="o">();</span>
+            <span class="n">onScrollChanged</span><span class="o">(</span><span class="n">mScrollX</span><span class="o">,</span> <span class="n">mScrollY</span><span class="o">,</span> <span class="n">oldX</span><span class="o">,</span> <span class="n">oldY</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">awakenScrollBars</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">postInvalidateOnAnimation</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * Move the scrolled position of your view. This will cause a call to
+     * {@link #onScrollChanged(int, int, int, int)} and the view will be
+     * invalidated.
+     * @param x the amount of pixels to scroll by horizontally
+     * @param y the amount of pixels to scroll by vertically
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">scrollBy</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">scrollTo</span><span class="o">(</span><span class="n">mScrollX</span> <span class="o">+</span> <span class="n">x</span><span class="o">,</span> <span class="n">mScrollY</span> <span class="o">+</span> <span class="n">y</span><span class="o">);</span>
+    <span class="o">}</span>
+
+</code></pre></div></div>
+<p>原来scrollBy最终还是调用scrollTo，那我们接着来看scrollTo，scrollTo改变的是View的mScrollX和mScrollY这两个属性，我们来看下文档对这两个属性的解释：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="cm">/**
+     * The offset, in pixels, by which the content of this view is scrolled
+     * horizontally.
+     * {@hide}
+     */</span>
+    <span class="nd">@ViewDebug</span><span class="o">.</span><span class="na">ExportedProperty</span><span class="o">(</span><span class="n">category</span> <span class="o">=</span> <span class="s">"scrolling"</span><span class="o">)</span>
+    <span class="kd">protected</span> <span class="kt">int</span> <span class="n">mScrollX</span><span class="o">;</span>
+    <span class="cm">/**
+     * The offset, in pixels, by which the content of this view is scrolled
+     * vertically.
+     * {@hide}
+     */</span>
+    <span class="nd">@ViewDebug</span><span class="o">.</span><span class="na">ExportedProperty</span><span class="o">(</span><span class="n">category</span> <span class="o">=</span> <span class="s">"scrolling"</span><span class="o">)</span>
+    <span class="kd">protected</span> <span class="kt">int</span> <span class="n">mScrollY</span><span class="o">;</span>
+</code></pre></div></div>
+
+<p>指的是View内容的偏移量，如果是ViewGroup的话作用的就是它的所有子view，如果是TextView的话则作用的就是TextView的内容。这两个api作用的对象是view的内容而不是view本身。</p>
+
+<h2 id="scrollto与scrollby的区别">scrollTo与scrollBy的区别</h2>
+
+<p>从上面源码，注意scrollTo(int x,int y)与scrollBy里的参数都是指偏移量，scrollTo是一步到位直接修改偏移量为x或y，而scrollBy是在当前偏移量加减x或y。这样说好像不是很准确，我们先来看下Android坐标系以及一些参数</p>
+
+<p><img src="https://github.com/skypx/BlogResource/raw/master/view/zuobiao.png" alt="avatar" /></p>
+
+<p>一般情况下View的坐标都是相对父ViewGroup，像以下的api：</p>
+
+<ol>
+  <li>getTop()</li>
+  <li>getLeft()</li>
+  <li>getRight()</li>
+  <li>getBottom()</li>
+  <li>getX()</li>
+  <li>getY()</li>
+</ol>
+
+<p>是不是发现明明通过scrollTo设置的偏移量是-300，按照正常的逻辑以及android坐标系，应该向上移动，怎么还向下移动了呢，这时候我们就要深入源码来查看究竟了</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Set the scrolled position of your view. This will cause a call to
+     * {@link #onScrollChanged(int, int, int, int)} and the view will be
+     * invalidated.
+     * @param x the x position to scroll to
+     * @param y the y position to scroll to
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">scrollTo</span><span class="o">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">,</span> <span class="kt">int</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mScrollX</span> <span class="o">!=</span> <span class="n">x</span> <span class="o">||</span> <span class="n">mScrollY</span> <span class="o">!=</span> <span class="n">y</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kt">int</span> <span class="n">oldX</span> <span class="o">=</span> <span class="n">mScrollX</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">oldY</span> <span class="o">=</span> <span class="n">mScrollY</span><span class="o">;</span>
+            <span class="n">mScrollX</span> <span class="o">=</span> <span class="n">x</span><span class="o">;</span>
+            <span class="n">mScrollY</span> <span class="o">=</span> <span class="n">y</span><span class="o">;</span>
+            <span class="n">invalidateParentCaches</span><span class="o">();</span>
+            <span class="n">onScrollChanged</span><span class="o">(</span><span class="n">mScrollX</span><span class="o">,</span> <span class="n">mScrollY</span><span class="o">,</span> <span class="n">oldX</span><span class="o">,</span> <span class="n">oldY</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">awakenScrollBars</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">postInvalidateOnAnimation</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>先来看看onScrollChanged</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * This is called in response to an internal scroll in this view (i.e., the
+     * view scrolled its own contents). This is typically as a result of
+     * {@link #scrollBy(int, int)} or {@link #scrollTo(int, int)} having been
+     * called.
+     *
+     * @param l Current horizontal scroll origin.
+     * @param t Current vertical scroll origin.
+     * @param oldl Previous horizontal scroll origin.
+     * @param oldt Previous vertical scroll origin.
+     */</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onScrollChanged</span><span class="o">(</span><span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">t</span><span class="o">,</span> <span class="kt">int</span> <span class="n">oldl</span><span class="o">,</span> <span class="kt">int</span> <span class="n">oldt</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">notifySubtreeAccessibilityStateChangedIfNeeded</span><span class="o">();</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="nc">AccessibilityManager</span><span class="o">.</span><span class="na">getInstance</span><span class="o">(</span><span class="n">mContext</span><span class="o">).</span><span class="na">isEnabled</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">postSendViewScrolledAccessibilityEventCallback</span><span class="o">();</span>
+        <span class="o">}</span>
+
+        <span class="n">mBackgroundSizeChanged</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="n">mDefaultFocusHighlightSizeChanged</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mForegroundInfo</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mForegroundInfo</span><span class="o">.</span><span class="na">mBoundsChanged</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kd">final</span> <span class="nc">AttachInfo</span> <span class="n">ai</span> <span class="o">=</span> <span class="n">mAttachInfo</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">ai</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">ai</span><span class="o">.</span><span class="na">mViewScrollChanged</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">mListenerInfo</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">mListenerInfo</span><span class="o">.</span><span class="na">mOnScrollChangeListener</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mListenerInfo</span><span class="o">.</span><span class="na">mOnScrollChangeListener</span><span class="o">.</span><span class="na">onScrollChange</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">oldl</span><span class="o">,</span> <span class="n">oldt</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>当View注册了OnScrollChangeListener，onScrollChange才会被调用。
+接着就调用了postInvalidateOnAnimation</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * &lt;p&gt;Cause an invalidate to happen on the next animation time step, typically the
+     * next display frame.&lt;/p&gt;
+     *
+     * &lt;p&gt;This method can be invoked from outside of the UI thread
+     * only when this View is attached to a window.&lt;/p&gt;
+     *
+     * @see #invalidate()
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">postInvalidateOnAnimation</span><span class="o">()</span> <span class="o">{</span>
+        <span class="c1">// We try only with the AttachInfo because there's no point in invalidating</span>
+        <span class="c1">// if we are not attached to our window</span>
+        <span class="kd">final</span> <span class="nc">AttachInfo</span> <span class="n">attachInfo</span> <span class="o">=</span> <span class="n">mAttachInfo</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">attachInfo</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">attachInfo</span><span class="o">.</span><span class="na">mViewRootImpl</span><span class="o">.</span><span class="na">dispatchInvalidateOnAnimation</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>在来看看dispatchInvalidateOnAnimation的实现</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">dispatchInvalidateOnAnimation</span><span class="o">(</span><span class="nc">View</span> <span class="n">view</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mInvalidateOnAnimationRunnable</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">view</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="kd">class</span> <span class="nc">InvalidateOnAnimationRunnable</span> <span class="kd">implements</span> <span class="nc">Runnable</span> <span class="o">{</span>
+        <span class="kd">private</span> <span class="kt">boolean</span> <span class="n">mPosted</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">View</span><span class="o">&gt;</span> <span class="n">mViews</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">View</span><span class="o">&gt;();</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span><span class="o">&gt;</span> <span class="n">mViewRects</span> <span class="o">=</span>
+                <span class="k">new</span> <span class="nc">ArrayList</span><span class="o">&lt;</span><span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span><span class="o">&gt;();</span>
+        <span class="kd">private</span> <span class="nc">View</span><span class="o">[]</span> <span class="n">mTempViews</span><span class="o">;</span>
+        <span class="kd">private</span> <span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span><span class="o">[]</span> <span class="n">mTempViewRects</span><span class="o">;</span>
+
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addView</span><span class="o">(</span><span class="nc">View</span> <span class="n">view</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mViews</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">view</span><span class="o">);</span>
+                <span class="n">postIfNeededLocked</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addViewRect</span><span class="o">(</span><span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span> <span class="n">info</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mViewRects</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">info</span><span class="o">);</span>
+                <span class="n">postIfNeededLocked</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">removeView</span><span class="o">(</span><span class="nc">View</span> <span class="n">view</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mViews</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">view</span><span class="o">);</span>
+
+                <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">mViewRects</span><span class="o">.</span><span class="na">size</span><span class="o">();</span> <span class="n">i</span><span class="o">--</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">;</span> <span class="o">)</span> <span class="o">{</span>
+                    <span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">mViewRects</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">info</span><span class="o">.</span><span class="na">target</span> <span class="o">==</span> <span class="n">view</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">mViewRects</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+                        <span class="n">info</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+
+                <span class="k">if</span> <span class="o">(</span><span class="n">mPosted</span> <span class="o">&amp;&amp;</span> <span class="n">mViews</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="n">mViewRects</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">mChoreographer</span><span class="o">.</span><span class="na">removeCallbacks</span><span class="o">(</span><span class="nc">Choreographer</span><span class="o">.</span><span class="na">CALLBACK_ANIMATION</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+                    <span class="n">mPosted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+            <span class="kd">final</span> <span class="kt">int</span> <span class="n">viewCount</span><span class="o">;</span>
+            <span class="kd">final</span> <span class="kt">int</span> <span class="n">viewRectCount</span><span class="o">;</span>
+            <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mPosted</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+                <span class="n">viewCount</span> <span class="o">=</span> <span class="n">mViews</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">viewCount</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">mTempViews</span> <span class="o">=</span> <span class="n">mViews</span><span class="o">.</span><span class="na">toArray</span><span class="o">(</span><span class="n">mTempViews</span> <span class="o">!=</span> <span class="kc">null</span>
+                            <span class="o">?</span> <span class="n">mTempViews</span> <span class="o">:</span> <span class="k">new</span> <span class="nc">View</span><span class="o">[</span><span class="n">viewCount</span><span class="o">]);</span>
+                    <span class="n">mViews</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+                <span class="o">}</span>
+
+                <span class="n">viewRectCount</span> <span class="o">=</span> <span class="n">mViewRects</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">viewRectCount</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">mTempViewRects</span> <span class="o">=</span> <span class="n">mViewRects</span><span class="o">.</span><span class="na">toArray</span><span class="o">(</span><span class="n">mTempViewRects</span> <span class="o">!=</span> <span class="kc">null</span>
+                            <span class="o">?</span> <span class="n">mTempViewRects</span> <span class="o">:</span> <span class="k">new</span> <span class="nc">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span><span class="o">[</span><span class="n">viewRectCount</span><span class="o">]);</span>
+                    <span class="n">mViewRects</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">viewCount</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">mTempViews</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">invalidate</span><span class="o">();</span>
+                <span class="n">mTempViews</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="o">}</span>
+
+            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">viewRectCount</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">View</span><span class="o">.</span><span class="na">AttachInfo</span><span class="o">.</span><span class="na">InvalidateInfo</span> <span class="n">info</span> <span class="o">=</span> <span class="n">mTempViewRects</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="n">info</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">invalidate</span><span class="o">(</span><span class="n">info</span><span class="o">.</span><span class="na">left</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">top</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">right</span><span class="o">,</span> <span class="n">info</span><span class="o">.</span><span class="na">bottom</span><span class="o">);</span>
+                <span class="n">info</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="kd">private</span> <span class="kt">void</span> <span class="nf">postIfNeededLocked</span><span class="o">()</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">mPosted</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mChoreographer</span><span class="o">.</span><span class="na">postCallback</span><span class="o">(</span><span class="nc">Choreographer</span><span class="o">.</span><span class="na">CALLBACK_ANIMATION</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+                <span class="n">mPosted</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>接着会调用run方法，其中有</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">viewCount</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+                <span class="n">mTempViews</span><span class="o">[</span><span class="n">i</span><span class="o">].</span><span class="na">invalidate</span><span class="o">();</span>
+                <span class="n">mTempViews</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="o">}</span>
+</code></pre></div></div>
+
+<p>遍历所有添加进去的View，然后对每个View调用invalidate()，</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+     * Invalidate the whole view. If the view is visible,
+     * {@link #onDraw(android.graphics.Canvas)} will be called at some point in
+     * the future.
+     * &lt;p&gt;
+     * This must be called from a UI thread. To call from a non-UI thread, call
+     * {@link #postInvalidate()}.
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">invalidate</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">invalidate</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">invalidateInternal</span><span class="o">(</span><span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">t</span><span class="o">,</span> <span class="kt">int</span> <span class="n">r</span><span class="o">,</span> <span class="kt">int</span> <span class="n">b</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">invalidateCache</span><span class="o">,</span>
+            <span class="kt">boolean</span> <span class="n">fullInvalidate</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mGhostView</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mGhostView</span><span class="o">.</span><span class="na">invalidate</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">skipInvalidate</span><span class="o">())</span> <span class="o">{</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">((</span><span class="n">mPrivateFlags</span> <span class="o">&amp;</span> <span class="o">(</span><span class="no">PFLAG_DRAWN</span> <span class="o">|</span> <span class="no">PFLAG_HAS_BOUNDS</span><span class="o">))</span> <span class="o">==</span> <span class="o">(</span><span class="no">PFLAG_DRAWN</span> <span class="o">|</span> <span class="no">PFLAG_HAS_BOUNDS</span><span class="o">)</span>
+                <span class="o">||</span> <span class="o">(</span><span class="n">invalidateCache</span> <span class="o">&amp;&amp;</span> <span class="o">(</span><span class="n">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_DRAWING_CACHE_VALID</span><span class="o">)</span> <span class="o">==</span> <span class="no">PFLAG_DRAWING_CACHE_VALID</span><span class="o">)</span>
+                <span class="o">||</span> <span class="o">(</span><span class="n">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_INVALIDATED</span><span class="o">)</span> <span class="o">!=</span> <span class="no">PFLAG_INVALIDATED</span>
+                <span class="o">||</span> <span class="o">(</span><span class="n">fullInvalidate</span> <span class="o">&amp;&amp;</span> <span class="n">isOpaque</span><span class="o">()</span> <span class="o">!=</span> <span class="n">mLastIsOpaque</span><span class="o">))</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">fullInvalidate</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mLastIsOpaque</span> <span class="o">=</span> <span class="n">isOpaque</span><span class="o">();</span>
+                <span class="n">mPrivateFlags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="no">PFLAG_DRAWN</span><span class="o">;</span>
+            <span class="o">}</span>
+
+            <span class="n">mPrivateFlags</span> <span class="o">|=</span> <span class="no">PFLAG_DIRTY</span><span class="o">;</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">invalidateCache</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mPrivateFlags</span> <span class="o">|=</span> <span class="no">PFLAG_INVALIDATED</span><span class="o">;</span>
+                <span class="n">mPrivateFlags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="no">PFLAG_DRAWING_CACHE_VALID</span><span class="o">;</span>
+            <span class="o">}</span>
+
+            <span class="c1">// Propagate the damage rectangle to the parent view.</span>
+            <span class="kd">final</span> <span class="nc">AttachInfo</span> <span class="n">ai</span> <span class="o">=</span> <span class="n">mAttachInfo</span><span class="o">;</span>
+            <span class="kd">final</span> <span class="nc">ViewParent</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mParent</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">ai</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">l</span> <span class="o">&lt;</span> <span class="n">r</span> <span class="o">&amp;&amp;</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">Rect</span> <span class="n">damage</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="na">mTmpInvalRect</span><span class="o">;</span>
+                <span class="n">damage</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">b</span><span class="o">);</span>
+                <span class="n">p</span><span class="o">.</span><span class="na">invalidateChild</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">damage</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="c1">// Damage the entire projection receiver, if necessary.</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mBackground</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">mBackground</span><span class="o">.</span><span class="na">isProjected</span><span class="o">())</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">View</span> <span class="n">receiver</span> <span class="o">=</span> <span class="n">getProjectionReceiver</span><span class="o">();</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">receiver</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">receiver</span><span class="o">.</span><span class="na">damageInParent</span><span class="o">();</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>注意这个地方, 这个地方是绘制view面的内容,这也解释了为什么说是用scrollto 或者 scrollby来
+移动里面的内容, 而不是这个view本身</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">ai</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">l</span> <span class="o">&lt;</span> <span class="n">r</span> <span class="o">&amp;&amp;</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">Rect</span> <span class="n">damage</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="na">mTmpInvalRect</span><span class="o">;</span>
+                <span class="n">damage</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">b</span><span class="o">);</span>
+                <span class="n">p</span><span class="o">.</span><span class="na">invalidateChild</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">damage</span><span class="o">);</span>
+            <span class="o">}</span>
+</code></pre></div></div>
+
+<p>接着</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Don't call or override this method. It is used for the implementation of
+     * the view hierarchy.
+     *
+     * @deprecated Use {@link #onDescendantInvalidated(View, View)} instead to observe updates to
+     * draw state in descendants.
+     */</span>
+    <span class="nd">@Deprecated</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">invalidateChild</span><span class="o">(</span><span class="nc">View</span> <span class="n">child</span><span class="o">,</span> <span class="kd">final</span> <span class="nc">Rect</span> <span class="n">dirty</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="nc">AttachInfo</span> <span class="n">attachInfo</span> <span class="o">=</span> <span class="n">mAttachInfo</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">attachInfo</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mHardwareAccelerated</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// HW accelerated fast path</span>
+            <span class="n">onDescendantInvalidated</span><span class="o">(</span><span class="n">child</span><span class="o">,</span> <span class="n">child</span><span class="o">);</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="nc">ViewParent</span> <span class="n">parent</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">attachInfo</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// If the child is drawing an animation, we want to copy this flag onto</span>
+            <span class="c1">// ourselves and the parent to make sure the invalidate request goes</span>
+            <span class="c1">// through</span>
+            <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">drawAnimation</span> <span class="o">=</span> <span class="o">(</span><span class="n">child</span><span class="o">.</span><span class="na">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_DRAW_ANIMATION</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">;</span>
+
+            <span class="c1">// Check whether the child that requests the invalidate is fully opaque</span>
+            <span class="c1">// Views being animated or transformed are not considered opaque because we may</span>
+            <span class="c1">// be invalidating their old position and need the parent to paint behind them.</span>
+            <span class="nc">Matrix</span> <span class="n">childMatrix</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getMatrix</span><span class="o">();</span>
+            <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">isOpaque</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">isOpaque</span><span class="o">()</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">drawAnimation</span> <span class="o">&amp;&amp;</span>
+                    <span class="n">child</span><span class="o">.</span><span class="na">getAnimation</span><span class="o">()</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">childMatrix</span><span class="o">.</span><span class="na">isIdentity</span><span class="o">();</span>
+            <span class="c1">// Mark the child as dirty, using the appropriate flag</span>
+            <span class="c1">// Make sure we do not set both flags at the same time</span>
+            <span class="kt">int</span> <span class="n">opaqueFlag</span> <span class="o">=</span> <span class="n">isOpaque</span> <span class="o">?</span> <span class="no">PFLAG_DIRTY_OPAQUE</span> <span class="o">:</span> <span class="no">PFLAG_DIRTY</span><span class="o">;</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">child</span><span class="o">.</span><span class="na">mLayerType</span> <span class="o">!=</span> <span class="no">LAYER_TYPE_NONE</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mPrivateFlags</span> <span class="o">|=</span> <span class="no">PFLAG_INVALIDATED</span><span class="o">;</span>
+                <span class="n">mPrivateFlags</span> <span class="o">&amp;=</span> <span class="o">~</span><span class="no">PFLAG_DRAWING_CACHE_VALID</span><span class="o">;</span>
+            <span class="o">}</span>
+
+            <span class="kd">final</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">location</span> <span class="o">=</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mInvalidateChildLocation</span><span class="o">;</span>
+            <span class="n">location</span><span class="o">[</span><span class="no">CHILD_LEFT_INDEX</span><span class="o">]</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">mLeft</span><span class="o">;</span>
+            <span class="n">location</span><span class="o">[</span><span class="no">CHILD_TOP_INDEX</span><span class="o">]</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">mTop</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">childMatrix</span><span class="o">.</span><span class="na">isIdentity</span><span class="o">()</span> <span class="o">||</span>
+                    <span class="o">(</span><span class="n">mGroupFlags</span> <span class="o">&amp;</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">FLAG_SUPPORT_STATIC_TRANSFORMATIONS</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="nc">RectF</span> <span class="n">boundingRect</span> <span class="o">=</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mTmpTransformRect</span><span class="o">;</span>
+                <span class="n">boundingRect</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">dirty</span><span class="o">);</span>
+                <span class="nc">Matrix</span> <span class="n">transformMatrix</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">((</span><span class="n">mGroupFlags</span> <span class="o">&amp;</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">FLAG_SUPPORT_STATIC_TRANSFORMATIONS</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="nc">Transformation</span> <span class="n">t</span> <span class="o">=</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mTmpTransformation</span><span class="o">;</span>
+                    <span class="kt">boolean</span> <span class="n">transformed</span> <span class="o">=</span> <span class="n">getChildStaticTransformation</span><span class="o">(</span><span class="n">child</span><span class="o">,</span> <span class="n">t</span><span class="o">);</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">transformed</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">transformMatrix</span> <span class="o">=</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mTmpMatrix</span><span class="o">;</span>
+                        <span class="n">transformMatrix</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">t</span><span class="o">.</span><span class="na">getMatrix</span><span class="o">());</span>
+                        <span class="k">if</span> <span class="o">(!</span><span class="n">childMatrix</span><span class="o">.</span><span class="na">isIdentity</span><span class="o">())</span> <span class="o">{</span>
+                            <span class="n">transformMatrix</span><span class="o">.</span><span class="na">preConcat</span><span class="o">(</span><span class="n">childMatrix</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                        <span class="n">transformMatrix</span> <span class="o">=</span> <span class="n">childMatrix</span><span class="o">;</span>
+                    <span class="o">}</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="n">transformMatrix</span> <span class="o">=</span> <span class="n">childMatrix</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="n">transformMatrix</span><span class="o">.</span><span class="na">mapRect</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">);</span>
+                <span class="n">dirty</span><span class="o">.</span><span class="na">set</span><span class="o">((</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">floor</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">left</span><span class="o">),</span>
+                        <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">floor</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">top</span><span class="o">),</span>
+                        <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">ceil</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">right</span><span class="o">),</span>
+                        <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">ceil</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">bottom</span><span class="o">));</span>
+            <span class="o">}</span>
+
+            <span class="k">do</span> <span class="o">{</span>
+                <span class="nc">View</span> <span class="n">view</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">parent</span> <span class="k">instanceof</span> <span class="nc">View</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">view</span> <span class="o">=</span> <span class="o">(</span><span class="nc">View</span><span class="o">)</span> <span class="n">parent</span><span class="o">;</span>
+                <span class="o">}</span>
+
+                <span class="k">if</span> <span class="o">(</span><span class="n">drawAnimation</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">view</span><span class="o">.</span><span class="na">mPrivateFlags</span> <span class="o">|=</span> <span class="no">PFLAG_DRAW_ANIMATION</span><span class="o">;</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">parent</span> <span class="k">instanceof</span> <span class="nc">ViewRootImpl</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="o">((</span><span class="nc">ViewRootImpl</span><span class="o">)</span> <span class="n">parent</span><span class="o">).</span><span class="na">mIsAnimating</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+
+                <span class="c1">// If the parent is dirty opaque or not dirty, mark it dirty with the opaque</span>
+                <span class="c1">// flag coming from the child that initiated the invalidate</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">((</span><span class="n">view</span><span class="o">.</span><span class="na">mViewFlags</span> <span class="o">&amp;</span> <span class="no">FADING_EDGE_MASK</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span>
+                            <span class="n">view</span><span class="o">.</span><span class="na">getSolidColor</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">opaqueFlag</span> <span class="o">=</span> <span class="no">PFLAG_DIRTY</span><span class="o">;</span>
+                    <span class="o">}</span>
+                    <span class="k">if</span> <span class="o">((</span><span class="n">view</span><span class="o">.</span><span class="na">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_DIRTY_MASK</span><span class="o">)</span> <span class="o">!=</span> <span class="no">PFLAG_DIRTY</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">view</span><span class="o">.</span><span class="na">mPrivateFlags</span> <span class="o">=</span> <span class="o">(</span><span class="n">view</span><span class="o">.</span><span class="na">mPrivateFlags</span> <span class="o">&amp;</span> <span class="o">~</span><span class="no">PFLAG_DIRTY_MASK</span><span class="o">)</span> <span class="o">|</span> <span class="n">opaqueFlag</span><span class="o">;</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+
+                <span class="n">parent</span> <span class="o">=</span> <span class="n">parent</span><span class="o">.</span><span class="na">invalidateChildInParent</span><span class="o">(</span><span class="n">location</span><span class="o">,</span> <span class="n">dirty</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">// Account for transform on current parent</span>
+                    <span class="nc">Matrix</span> <span class="n">m</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="na">getMatrix</span><span class="o">();</span>
+                    <span class="k">if</span> <span class="o">(!</span><span class="n">m</span><span class="o">.</span><span class="na">isIdentity</span><span class="o">())</span> <span class="o">{</span>
+                        <span class="nc">RectF</span> <span class="n">boundingRect</span> <span class="o">=</span> <span class="n">attachInfo</span><span class="o">.</span><span class="na">mTmpTransformRect</span><span class="o">;</span>
+                        <span class="n">boundingRect</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="n">dirty</span><span class="o">);</span>
+                        <span class="n">m</span><span class="o">.</span><span class="na">mapRect</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">);</span>
+                        <span class="n">dirty</span><span class="o">.</span><span class="na">set</span><span class="o">((</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">floor</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">left</span><span class="o">),</span>
+                                <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">floor</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">top</span><span class="o">),</span>
+                                <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">ceil</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">right</span><span class="o">),</span>
+                                <span class="o">(</span><span class="kt">int</span><span class="o">)</span> <span class="nc">Math</span><span class="o">.</span><span class="na">ceil</span><span class="o">(</span><span class="n">boundingRect</span><span class="o">.</span><span class="na">bottom</span><span class="o">));</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span> <span class="k">while</span> <span class="o">(</span><span class="n">parent</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>会有这样的一行代码：parent = parent.invalidateChildInParent(location, dirty);</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">public</span> <span class="nc">ViewParent</span> <span class="nf">invalidateChildInParent</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">location</span><span class="o">,</span> <span class="nc">Rect</span> <span class="n">dirty</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">mHostView</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">dirty</span><span class="o">.</span><span class="na">offset</span><span class="o">(</span><span class="n">location</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="n">location</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
+                <span class="k">if</span><span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">mHostView</span> <span class="k">instanceof</span> <span class="nc">ViewGroup</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">location</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                    <span class="n">location</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+                    <span class="kt">int</span><span class="o">[]</span> <span class="n">offset</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="mi">2</span><span class="o">];</span>
+                    <span class="k">this</span><span class="o">.</span><span class="na">getOffset</span><span class="o">(</span><span class="n">offset</span><span class="o">);</span>
+                    <span class="n">dirty</span><span class="o">.</span><span class="na">offset</span><span class="o">(</span><span class="n">offset</span><span class="o">[</span><span class="mi">0</span><span class="o">],</span> <span class="n">offset</span><span class="o">[</span><span class="mi">1</span><span class="o">]);</span>
+                    <span class="k">return</span> <span class="kd">super</span><span class="o">.</span><span class="na">invalidateChildInParent</span><span class="o">(</span><span class="n">location</span><span class="o">,</span> <span class="n">dirty</span><span class="o">);</span>
+                <span class="o">}</span>
+
+                <span class="k">this</span><span class="o">.</span><span class="na">invalidate</span><span class="o">(</span><span class="n">dirty</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="cm">/**
+     * Mark the area defined by dirty as needing to be drawn. If the view is
+     * visible, {@link #onDraw(android.graphics.Canvas)} will be called at some
+     * point in the future.
+     * &lt;p&gt;
+     * This must be called from a UI thread. To call from a non-UI thread, call
+     * {@link #postInvalidate()}.
+     * &lt;p&gt;
+     * &lt;b&gt;WARNING:&lt;/b&gt; In API 19 and below, this method may be destructive to
+     * {@code dirty}.
+     *
+     * @param dirty the rectangle representing the bounds of the dirty region
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">invalidate</span><span class="o">(</span><span class="nc">Rect</span> <span class="n">dirty</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">scrollX</span> <span class="o">=</span> <span class="n">mScrollX</span><span class="o">;</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">scrollY</span> <span class="o">=</span> <span class="n">mScrollY</span><span class="o">;</span>
+        <span class="n">invalidateInternal</span><span class="o">(</span><span class="n">dirty</span><span class="o">.</span><span class="na">left</span> <span class="o">-</span> <span class="n">scrollX</span><span class="o">,</span> <span class="n">dirty</span><span class="o">.</span><span class="na">top</span> <span class="o">-</span> <span class="n">scrollY</span><span class="o">,</span>
+                <span class="n">dirty</span><span class="o">.</span><span class="na">right</span> <span class="o">-</span> <span class="n">scrollX</span><span class="o">,</span> <span class="n">dirty</span><span class="o">.</span><span class="na">bottom</span> <span class="o">-</span> <span class="n">scrollY</span><span class="o">,</span> <span class="kc">true</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>这个地方都是减去scrollX 和减去scrollY, 当你传入负数的时候就是正值了,所以, 我们就和开篇对应起来了, 传入负数向正方向移动, 传入正数向负方向移动</strong></p>
+
+<p>参考: <a href="https://www.jianshu.com/p/ce618bebb043">https://www.jianshu.com/p/ce618bebb043</a></p>
+:ET

@@ -1,0 +1,40 @@
+I"�<ul id="markdown-toc">
+  <li><a href="#全局变量的增强" id="markdown-toc-全局变量的增强">全局变量的增强</a></li>
+  <li><a href="#函数增强" id="markdown-toc-函数增强">函数增强</a></li>
+  <li><a href="#类型转换增强" id="markdown-toc-类型转换增强">类型转换增强</a></li>
+</ul>
+
+<h3 id="全局变量的增强">全局变量的增强</h3>
+
+<ol>
+  <li>
+    <p>c语言可以定义全局变量
+int a;
+int a = 20;</p>
+  </li>
+  <li>
+    <p>但是在c++中这样定义就不可以，因为检测增强了</p>
+  </li>
+</ol>
+
+<h3 id="函数增强">函数增强</h3>
+
+<p>1.在c中,没有返回值和形参检测,可以编译过</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">getRec</span><span class="o">(</span><span class="n">w</span><span class="o">,</span> <span class="n">h</span><span class="o">)</span>
+<span class="o">{</span>
+
+<span class="o">}</span>
+
+
+<span class="kt">int</span> <span class="nf">main</span><span class="o">()</span>
+<span class="o">{</span>
+  <span class="n">getRec</span><span class="o">(</span><span class="mi">10</span><span class="o">,</span> <span class="mi">20</span><span class="o">,</span> <span class="mi">30</span><span class="o">);</span><span class="c1">//也可以编译通过</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>2.在c++中这些是不可以的</p>
+
+<h3 id="类型转换增强">类型转换增强</h3>
+:ET
